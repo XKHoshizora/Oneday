@@ -1,6 +1,6 @@
 ## Oneday 0.1.0 prototype
 
-- Fix startup on current iOS simulators and add the Oneday sunrise app icon.
+- Fix startup on current iOS simulators and add the Oneday paper-boat app icon with dark and tinted variants.
 - Add an iOS prototype with Clash subscription import, node selection, and a personally signed VPN extension for VLESS + REALITY and Hysteria2.
 
 ## v2.5.8

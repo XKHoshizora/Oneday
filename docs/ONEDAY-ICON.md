@@ -1,11 +1,18 @@
 # Oneday app icon
 
-The icon uses a rising amber sun and a softly frosted blue horizon on a porcelain-white background. It represents the hope that a brighter day will make the app unnecessary. The iOS asset is opaque and square; the system applies its own corner mask.
+A folded paper boat sails across calm water toward a rising amber sun. The boat is a raft in the Buddhist sense: something you use to reach the other shore and then leave behind. It stands for the app's wish that one day you no longer need it. Sunlight shines through the sail, so the day the boat is heading for is already visible in it.
 
-Generated with the built-in imagegen tool, then resized to the 1024-pixel iOS source size without changing the artwork.
+The palette continues the earlier sunrise icon: porcelain sky, amber sun, and pale blue water. The iOS assets are opaque and square; the system applies its own corner mask.
 
-Asset: `ios/App/Assets.xcassets/AppIcon.appiconset/AppIcon.png`.
+| Appearance | Asset | Source |
+| --- | --- | --- |
+| Default | `AppIcon.png` | `docs/icon/oneday-icon-light.svg` |
+| Dark | `AppIcon-Dark.png` | `docs/icon/oneday-icon-dark.svg` |
+| Tinted | `AppIcon-Tinted.png` | `docs/icon/oneday-icon-tinted.svg` |
 
-## Generation prompt
+The assets are in `ios/App/Assets.xcassets/AppIcon.appiconset/`. To export an asset after editing its SVG (the tinted asset also needs `-colorspace Gray` after `-`):
 
-Use case: logo-brand. Design ONE finished premium iOS app icon for Oneday / 有朝 / いつか, a quiet utility named for a hopeful future day. The user specifically wants restrained, exquisitely crafted, Apple-native quality. Redesign the identity around a single luminous rising sun with soft physical depth, not a generic line logo. Actual flat square full-bleed 1024x1024 asset, opaque, square corners, no surrounding mockup. Background: very pale cool porcelain white, almost imperceptible light gray-blue depth, immaculate and bright. Main form: a large optically centered warm amber-gold sun disc, the lower third disappearing cleanly behind ONE horizontal band of softly frosted pale blue glass, like dawn seen through a horizon. The gold sun has beautiful restrained volumetric shading, a rich apricot center and a delicate luminous rim, with no texture. The horizon glass is a single precise thin quiet plane that softly refracts and diffuses only the submerged bottom of the disc, suggesting that night is clearing. Sophisticated material and lighting, subtle ambient occlusion, sculptural but visually extremely simple. Generous negative space, recognizable at 40 px. Sun plus one horizon, nothing else. Keep it calm, iconic, warm, hopeful, polished enough to sit beside Apple's Weather and Journal icons. Avoid dark teal backgrounds, outlined rings, enclosing circles, badges, thin logo strokes, mountains, hills, rays, clouds, characters, lettering, numbers, power symbols, shields, locks, sparkles, rainbow gradients, chunky toy 3D, external drop shadows, pre-rounded icon tile, or multiple variants. No text or watermark.
+```sh
+rsvg-convert -w 1024 -h 1024 docs/icon/oneday-icon-light.svg \
+  | magick - -alpha off -strip PNG24:ios/App/Assets.xcassets/AppIcon.appiconset/AppIcon.png
+```
