@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
 import { load } from 'js-yaml'
+import { describe, expect, it } from 'vitest'
+
 import { parseNodes, runtimeConfig } from './profile'
 
 const fixture = `proxies:
@@ -30,9 +31,14 @@ const fixture = `proxies:
 describe('Clash subscription import', () => {
   it('preserves REALITY, Vision and Hysteria2 options through runtime generation', () => {
     const before = parseNodes(fixture)
-    const result = load(runtimeConfig(fixture, 'Hy2')) as Record<string, unknown>
+    const result = load(runtimeConfig(fixture, 'Hy2')) as Record<
+      string,
+      unknown
+    >
     expect(result.proxies).toEqual(before)
-    expect(result['proxy-groups']).toEqual([{ name: 'Oneday', type: 'select', proxies: ['Hy2'] }])
+    expect(result['proxy-groups']).toEqual([
+      { name: 'Oneday', type: 'select', proxies: ['Hy2'] },
+    ])
     expect(result.rules).toContain('MATCH,Oneday')
     expect(result).not.toHaveProperty('external-controller')
   })
