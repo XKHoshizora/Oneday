@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="640" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#E6EFF6"/><stop offset="0.5" stop-color="#F6F5F2"/><stop offset="1" stop-color="#FDE8D0"/></linearGradient>
+<radialGradient id="glow" cx="512" cy="640" r="520" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFDCA8" stop-opacity="0.9"/><stop offset="0.5" stop-color="#FFE9CC" stop-opacity="0.35"/><stop offset="1" stop-color="#FFE9CC" stop-opacity="0"/></radialGradient>
+<radialGradient id="sun" cx="512" cy="640" r="328" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFF0C6"/><stop offset="0.45" stop-color="#FFD186"/><stop offset="1" stop-color="#F7A35E"/></radialGradient>
+<linearGradient id="water" x1="0" y1="640" x2="0" y2="1024" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#BED6E7"/><stop offset="0.45" stop-color="#D5E5F0"/><stop offset="1" stop-color="#ECF3F8"/></linearGradient>
+<linearGradient id="path" x1="0" y1="640" x2="0" y2="1000" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFD597" stop-opacity="0.95"/><stop offset="1" stop-color="#FFD597" stop-opacity="0"/></linearGradient>
+<linearGradient id="flapL" x1="0" y1="556" x2="0" y2="742" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#EAF0F5"/></linearGradient><linearGradient id="flapR" x1="0" y1="556" x2="0" y2="742" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#E8EDF2"/><stop offset="1" stop-color="#D3DDE6"/></linearGradient><linearGradient id="pocket" x1="0" y1="606" x2="0" y2="742" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#E5D5C2"/><stop offset="1" stop-color="#C2CED9"/></linearGradient><linearGradient id="sailL" x1="0" y1="288" x2="0" y2="606" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FFF4E5"/></linearGradient><linearGradient id="sailR" x1="0" y1="288" x2="0" y2="606" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F5ECE3"/><stop offset="1" stop-color="#F8D8B6"/></linearGradient>
+<linearGradient id="fade" x1="0" y1="712" x2="0" y2="900" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFFFFF" stop-opacity="1"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+<mask id="fadeMask"><rect y="712" width="1024" height="312" fill="url(#fade)"/></mask>
+<filter id="blur28" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="28"/></filter>
+<filter id="blur8" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8"/></filter>
+<clipPath id="skyClip"><rect width="1024" height="640"/></clipPath>
+<clipPath id="waterClip"><rect y="640" width="1024" height="384"/></clipPath>
+<g id="boat"><polygon points="204,556 388,606 512,742 330,742" fill="url(#flapL)"/><polygon points="820,556 636,606 512,742 694,742" fill="url(#flapR)"/><polygon points="388,606 636,606 512,742" fill="url(#pocket)"/><polygon points="388,606 512,288 512,606" fill="url(#sailL)"/><polygon points="636,606 512,288 512,606" fill="url(#sailR)"/></g>
+</defs>
+<rect width="1024" height="640" fill="url(#sky)"/>
+<rect width="1024" height="1024" fill="url(#glow)" clip-path="url(#skyClip)"/>
+<g clip-path="url(#skyClip)">
+<circle cx="512" cy="588" r="282" fill="#FFCB86" opacity="0.6" filter="url(#blur28)"/>
+<circle cx="512" cy="588" r="268" fill="url(#sun)"/>
+</g>
+<rect y="640" width="1024" height="384" fill="url(#water)"/>
+<g clip-path="url(#waterClip)">
+<rect x="398" y="640" width="228" height="384" fill="url(#path)" filter="url(#blur28)"/>
+<g mask="url(#fadeMask)" opacity="0.2"><use href="#boat" transform="translate(512,712) scale(1.02,-1.02) translate(-512,-742)" filter="url(#blur8)"/></g>
+</g>
+<rect y="638" width="1024" height="3" fill="#FFFFFF" opacity="0.85"/>
+<g transform="translate(512,712) scale(1.02) translate(-512,-742)">
+<ellipse cx="512" cy="744" rx="190" ry="10" fill="#5F7A90" opacity="0.32" filter="url(#blur8)"/>
+<use href="#boat"/>
+</g>
+</svg>
