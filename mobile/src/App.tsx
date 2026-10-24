@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { type CSSProperties, useEffect, useRef, useState } from 'react'
 
 import { callNative, type AppState } from './bridge'
 import {
@@ -7,6 +7,8 @@ import {
   type ClashNode,
   type Profile,
 } from './profile'
+import { shareLinksToYaml } from './share-links'
+import { Verse } from './Verse'
 
 const statusText: Record<string, string> = {
   connected: '已连接',
@@ -24,12 +26,17 @@ export function App() {
   const [selected, setSelected] = useState('')
   const [url, setURL] = useState('')
   const [busy, setBusy] = useState(false)
+  // Only connect and disconnect spin the power button; imports also set busy.
+  const [toggling, setToggling] = useState(false)
   const [error, setError] = useState('')
+  // Bumped on each import so the profile and node list replay their entrance.
+  const [revision, setRevision] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const connected =
     state.status === 'connected' || state.status === 'reasserting'
   const transition =
     state.status === 'connecting' || state.status === 'disconnecting'
+  const statusLabel = busy ? '请稍候' : statusText[state.status] || '未连接'
 
   useEffect(() => {
     let active = true
@@ -71,12 +78,16 @@ export function App() {
 
   async function save(yaml: string, name: string, sourceURL?: string) {
     const items = parseNodes(yaml)
-    const next: Profile = { yaml, name, sourceURL, selectedNode: items[0].name }
+    const selectedNode = items.some((node) => node.name === selected)
+      ? selected
+      : items[0].name
+    const next: Profile = { yaml, name, sourceURL, selectedNode }
     await callNative('saveProfile', { profile: next })
     setProfile(next)
     setNodes(items)
-    setSelected(items[0].name)
+    setSelected(selectedNode)
     setURL('')
+    setRevision((value) => value + 1)
   }
 
   async function action(task: () => Promise<void>) {
@@ -91,17 +102,25 @@ export function App() {
     }
   }
 
-  async function importURL(sourceURL: string) {
+  async function importInput(input: string) {
     await action(async () => {
+      if (!/^https?:\/\//i.test(input)) {
+        const { yaml, skipped } = shareLinksToYaml(input)
+        await save(yaml, '节点链接')
+        if (skipped.length > 0)
+          setError(`已跳过暂不支持的 ${skipped.join('、')} 链接。`)
+        return
+      }
       const result = await callNative<{ content: string }>(
         'fetchSubscription',
-        { url: sourceURL },
+        { url: input },
       )
-      await save(result.content, '我的订阅', sourceURL)
+      await save(result.content, '我的订阅', input)
     })
   }
 
   async function toggle() {
+    setToggling(true)
     await action(async () => {
       if (connected) {
         await callNative('disconnect')
@@ -118,6 +137,7 @@ export function App() {
       })
       setState((current) => ({ ...current, status: 'connecting' }))
     })
+    setToggling(false)
   }
 
   return (
@@ -127,20 +147,11 @@ export function App() {
           <span className="sun" aria-hidden="true" />
           有朝<span className="roman">Oneday</span>
         </div>
-        <span className="edition">iOS 原型</span>
       </header>
       <section className="connection">
-        <div className="verse">
-          <p className="eyebrow">直到有一天</p>
-          <h1>
-            愿你不再
-            <br />
-            需要连接。
-          </h1>
-          <p className="intro">在那之前，让连接简单一点。</p>
-        </div>
+        <Verse />
         <button
-          className={`power ${connected ? 'active' : ''}`}
+          className={`power ${connected ? 'active' : ''} ${toggling || transition ? 'pending' : ''}`}
           onClick={toggle}
           disabled={busy || transition || (!profile && !connected)}
           aria-label={connected ? '断开连接' : '连接 VPN'}
@@ -151,7 +162,9 @@ export function App() {
         </button>
         <div className="connection-status" role="status">
           <span className={connected ? 'dot on' : 'dot'} />
-          {busy ? '请稍候' : statusText[state.status] || '未连接'}
+          <span key={statusLabel} className="status-text">
+            {statusLabel}
+          </span>
         </div>
         {state.tunnelAvailable === false && (
           <p className="route-label">
@@ -174,42 +187,49 @@ export function App() {
 
       <section className="card">
         <div className="section-title">
-          <h2>订阅</h2>
-          {profile && (
+          <h2>配置</h2>
+          {profile?.sourceURL && (
             <button
               className="text-button"
-              disabled={busy || connected || transition || !profile.sourceURL}
-              onClick={() => profile.sourceURL && importURL(profile.sourceURL)}
+              disabled={busy || connected || transition}
+              onClick={() =>
+                profile.sourceURL && importInput(profile.sourceURL)
+              }
             >
               更新
             </button>
           )}
         </div>
         {profile ? (
-          <div className="profile-summary">
+          <div
+            key={revision}
+            className={revision ? 'profile-summary fresh' : 'profile-summary'}
+          >
             <span className="profile-icon">↗</span>
             <div>
               <strong>{profile.name}</strong>
               <p>{nodes.length} 个节点 · 仅保存在本机</p>
             </div>
-            <span className="badge">Clash</span>
           </div>
         ) : (
-          <p className="muted">添加你的 Clash / Mihomo 订阅即可开始。</p>
+          <p className="muted">
+            添加 Clash / Mihomo 订阅，或粘贴 vless:// 与 hysteria2:// 节点链接。
+          </p>
         )}
         <form
           onSubmit={(event) => {
             event.preventDefault()
-            if (url.trim()) void importURL(url.trim())
+            if (url.trim()) void importInput(url.trim())
           }}
         >
           <label className="sr-only" htmlFor="subscription">
-            Clash 订阅链接
+            订阅链接或节点链接
           </label>
           <input
             id="subscription"
-            type="url"
-            placeholder="粘贴订阅链接"
+            type="text"
+            inputMode="url"
+            placeholder="粘贴订阅或节点链接"
             value={url}
             onChange={(event) => setURL(event.target.value)}
             autoCapitalize="none"
@@ -250,15 +270,19 @@ export function App() {
       </section>
 
       {nodes.length > 0 && (
-        <section className="card nodes">
+        <section
+          key={revision}
+          className={revision ? 'card nodes fresh' : 'card nodes'}
+        >
           <div className="section-title">
             <h2>选择节点</h2>
             <span className="muted">{nodes.length}</span>
           </div>
-          {nodes.map((node) => (
+          {nodes.map((node, index) => (
             <button
               key={node.name}
               className={`node ${selected === node.name ? 'selected' : ''}`}
+              style={{ '--i': Math.min(index, 8) } as CSSProperties}
               disabled={busy || connected || transition}
               onClick={() => setSelected(node.name)}
             >

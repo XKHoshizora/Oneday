@@ -1,16 +1,105 @@
 :root {
+  --bg: #f3f4ee;
+  --ink: #153c34;
+  --ink-soft: #5d6f64;
+  --label: #6d8174;
+  --muted: #8a978d;
+  --faint: #a3ac9d;
+  --accent: #5e7b63;
+  --accent-strong: #507d51;
+  --success: #548a57;
+  --card: #fffefa;
+  --card-border: #e1e6d9;
+  --divider: #eef0e7;
+  --field: #f8f9f3;
+  --field-border: #e0e5da;
+  --field-ink: #324f42;
+  --placeholder: #a6afa3;
+  --chip: #eff2e8;
+  --chip-ink: #7b9276;
+  --chip-active: #e6ecd9;
+  --chip-active-ink: #3d7047;
+  --primary: #204e3b;
+  --on-primary: #f6f8ef;
+  --power: #e9ede2;
+  --power-border: #c9d3c3;
+  --power-ink: #214e40;
+  --power-ring: #edf0e6;
+  --power-ring-edge: #e2e8d9;
+  --power-on: #1d4d3c;
+  --power-on-ink: #e7efd9;
+  --power-on-ring: #dfe8d5;
+  --power-on-ring-edge: #cfdbc4;
+  --arc: #6f9b72;
+  --radio-border: #cfd8c7;
+  --dot: #a5afa2;
+  --sun: #c6a66b;
+  --sun-halo: #e7dfcc;
+  --dawn: 198, 166, 107;
+  --error: #fff0e8;
+  --error-border: #e9cec1;
+  --error-ink: #986343;
+  --focus: #b8cc92;
+
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
-  color: #153c34;
-  background: #f3f4ee;
+  color: var(--ink);
+  background: var(--bg);
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
-  color-scheme: light;
+  color-scheme: light dark;
+}
+/* Night ink: the same paper and ink, turned over. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1613;
+    --ink: #e6ebdf;
+    --ink-soft: #a3b2a8;
+    --label: #93a39a;
+    --muted: #7f8d84;
+    --faint: #5f6c65;
+    --accent: #9cc3a0;
+    --accent-strong: #8fc08f;
+    --success: #7fbf7f;
+    --card: #151e1a;
+    --card-border: #22302a;
+    --divider: #1e2a25;
+    --field: #101814;
+    --field-border: #2a3832;
+    --field-ink: #dfe6d8;
+    --placeholder: #5f6c65;
+    --chip: #1d2823;
+    --chip-ink: #8fa894;
+    --chip-active: #24372c;
+    --chip-active-ink: #a8d4a6;
+    --primary: #cfe2c4;
+    --on-primary: #10201a;
+    --power: #18221e;
+    --power-border: #2b3a33;
+    --power-ink: #cfe0c6;
+    --power-ring: #141d19;
+    --power-ring-edge: #1f2b26;
+    --power-on: #d6e7ca;
+    --power-on-ink: #13271e;
+    --power-on-ring: #1f2f27;
+    --power-on-ring-edge: #2c4035;
+    --arc: #8fc08f;
+    --radio-border: #34443c;
+    --dot: #4f5c55;
+    --sun: #d4b47a;
+    --sun-halo: #3a3324;
+    --dawn: 212, 180, 122;
+    --error: #2a1c16;
+    --error-border: #4a3226;
+    --error-ink: #e6b08f;
+    --focus: #6f8f56;
+  }
 }
 * {
   box-sizing: border-box;
 }
 body {
   margin: 0;
+  background: var(--bg);
 }
 button,
 input {
@@ -26,7 +115,7 @@ button:disabled {
 }
 button:focus-visible,
 input:focus-visible {
-  outline: 3px solid #b8cc92;
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
 main {
@@ -52,22 +141,14 @@ header {
   font-size: 12px;
   font-weight: 450;
   letter-spacing: 0;
-  color: #6c8178;
+  color: var(--label);
 }
 .sun {
   width: 17px;
   height: 17px;
   border-radius: 50%;
-  background: #c6a66b;
-  box-shadow: 0 0 0 4px #e7dfcc;
-}
-.edition {
-  font-size: 10px;
-  letter-spacing: 1px;
-  border: 1px solid #d9ded3;
-  border-radius: 12px;
-  padding: 5px 9px;
-  color: #738178;
+  background: var(--sun);
+  box-shadow: 0 0 0 4px var(--sun-halo);
 }
 .connection {
   text-align: center;
@@ -78,12 +159,20 @@ header {
   writing-mode: vertical-rl;
   text-align: start;
   height: max-content;
+  --pace: 1;
+  --stroke: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Later launches keep the same rhythm at a quicker tempo, about 1.5s in total. */
+.verse.quick {
+  --pace: 0.24;
+  --stroke: 0.5;
 }
 .eyebrow {
   font-size: 15px;
   line-height: 1;
   letter-spacing: 0.32em;
-  color: #5d6f64;
+  color: var(--ink-soft);
   margin: 0;
   margin-block-end: 18px;
 }
@@ -99,25 +188,88 @@ h1 {
   font-size: 15px;
   line-height: 1;
   letter-spacing: 0.2em;
-  color: #5d6f64;
+  color: var(--ink-soft);
   margin: 0;
   margin-block-start: 20px;
 }
+h1 > span {
+  display: block;
+}
+@property --brush {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 130%;
+}
+/* Each character is written on its own beat; timings come from the Verse schedule. */
+.glyph {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 calc(var(--brush) - 30%),
+    transparent var(--brush)
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 calc(var(--brush) - 30%),
+    transparent var(--brush)
+  );
+  animation: write calc(var(--w) * var(--stroke))
+    cubic-bezier(0.22, 0.9, 0.32, 1) calc(var(--d) * var(--pace)) both;
+}
+.mark {
+  display: inline-block;
+  animation: press calc(var(--w) * var(--stroke)) cubic-bezier(0.3, 1.5, 0.5, 1)
+    calc(var(--d) * var(--pace)) both;
+}
 .power {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 102px;
   height: 102px;
   margin: 28px auto 20px;
-  border: 1px solid #c9d3c3;
+  border: 1px solid var(--power-border);
   border-radius: 50%;
-  background: #e9ede2;
+  background: var(--power);
   box-shadow:
-    0 0 0 10px #edf0e6,
-    0 0 0 11px #e2e8d9;
-  color: #214e40;
-  transition: background 0.2s;
+    0 0 0 10px var(--power-ring),
+    0 0 0 11px var(--power-ring-edge);
+  color: var(--power-ink);
+  transition:
+    background-color 0.5s ease,
+    border-color 0.5s ease,
+    color 0.5s ease,
+    transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.power:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.power.pending:disabled {
+  opacity: 1;
+}
+.power::after {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  background: conic-gradient(from 0turn, transparent 0 55%, var(--arc));
+  -webkit-mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 2px),
+    #000 calc(100% - 2px)
+  );
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 2px),
+    #000 calc(100% - 2px)
+  );
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.power.pending::after {
+  opacity: 1;
+  animation: spin 1.2s linear infinite;
 }
 .power svg {
   width: 38px;
@@ -128,12 +280,13 @@ h1 {
   stroke-linecap: round;
 }
 .power.active {
-  background: #1d4d3c;
-  color: #e7efd9;
-  border-color: #1d4d3c;
+  background: var(--power-on);
+  color: var(--power-on-ink);
+  border-color: var(--power-on);
   box-shadow:
-    0 0 0 10px #dfe8d5,
-    0 0 0 11px #cfdbc4;
+    0 0 0 10px var(--power-on-ring),
+    0 0 0 11px var(--power-on-ring-edge);
+  animation: dawn 1.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .connection-status {
   display: flex;
@@ -141,28 +294,32 @@ h1 {
   justify-content: center;
   gap: 7px;
   font-size: 12px;
-  color: #6d8174;
+  color: var(--label);
 }
 .dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #a5afa2;
+  background: var(--dot);
+  transition: background-color 0.4s;
 }
 .dot.on {
-  background: #548a57;
+  background: var(--success);
+}
+.status-text {
+  animation: lift 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 .route-label {
   font-size: 11px;
-  color: #6f8379;
+  color: var(--label);
   margin: 8px 0 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .card {
-  background: #fffefa;
-  border: 1px solid #e1e6d9;
+  background: var(--card);
+  border: 1px solid var(--card-border);
   border-radius: 17px;
   padding: 20px;
   margin: 14px 0;
@@ -180,15 +337,19 @@ h2 {
 }
 .muted {
   font-size: 11px;
-  color: #8c978e;
+  color: var(--muted);
   line-height: 1.7;
 }
 .text-button {
   border: 0;
   background: none;
-  color: #5e7b63;
+  color: var(--accent);
   font-size: 11px;
   padding: 0;
+  transition: opacity 0.15s;
+}
+.text-button:active:not(:disabled) {
+  opacity: 0.55;
 }
 .profile-summary {
   display: flex;
@@ -196,10 +357,13 @@ h2 {
   gap: 10px;
   margin-bottom: 18px;
 }
+.profile-summary.fresh {
+  animation: lift 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
 .profile-icon {
   width: 33px;
   height: 36px;
-  background: #edf0e6;
+  background: var(--chip);
   border-radius: 9px;
   display: grid;
   place-items: center;
@@ -210,41 +374,41 @@ h2 {
 }
 .profile-summary p {
   font-size: 10px;
-  color: #8a978d;
+  color: var(--muted);
   margin: 4px 0 0;
-}
-.badge {
-  margin-left: auto;
-  font-size: 9px;
-  color: #75916d;
-  background: #f0f3e8;
-  border-radius: 5px;
-  padding: 4px 7px;
 }
 form {
   display: flex;
   gap: 8px;
 }
-input[type="url"] {
+form input {
   min-width: 0;
+  min-height: 44px;
   flex: 1;
-  border: 1px solid #e0e5da;
-  background: #f8f9f3;
+  border: 1px solid var(--field-border);
+  background: var(--field);
   border-radius: 9px;
   padding: 11px;
   font-size: 16px;
-  color: #324f42;
+  color: var(--field-ink);
 }
 input::placeholder {
-  color: #a6afa3;
+  color: var(--placeholder);
 }
 .import-button {
+  min-height: 44px;
   border: 0;
-  background: #204e3b;
+  background: var(--primary);
   border-radius: 9px;
-  color: #f6f8ef;
+  color: var(--on-primary);
   padding: 0 17px;
   font-size: 11px;
+  transition:
+    opacity 0.2s,
+    transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.import-button:active:not(:disabled) {
+  transform: scale(0.97);
 }
 .file-button {
   margin-top: 14px;
@@ -260,9 +424,13 @@ input::placeholder {
   text-align: left;
   background: none;
   border: 0;
-  border-top: 1px solid #eef0e7;
+  border-top: 1px solid var(--divider);
   padding: 14px 0;
   color: inherit;
+}
+.nodes.fresh .node {
+  animation: rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i) * 45ms + 80ms);
 }
 .node-symbol {
   width: 32px;
@@ -270,13 +438,16 @@ input::placeholder {
   border-radius: 9px;
   display: grid;
   place-items: center;
-  background: #f1f3eb;
+  background: var(--chip);
   font-size: 21px;
-  color: #7b9276;
+  color: var(--chip-ink);
+  transition:
+    background-color 0.25s,
+    color 0.25s;
 }
 .node.selected .node-symbol {
-  background: #e6ecd9;
-  color: #3d7047;
+  background: var(--chip-active);
+  color: var(--chip-active-ink);
 }
 .node-info {
   min-width: 0;
@@ -295,16 +466,31 @@ input::placeholder {
 .node-info small {
   font-size: 8px;
   letter-spacing: 0.5px;
-  color: #9ba394;
+  color: var(--muted);
 }
 .radio {
+  position: relative;
+  flex: none;
   width: 14px;
   height: 14px;
-  border: 1px solid #cfd8c7;
+  border: 1px solid var(--radio-border);
   border-radius: 50%;
+  transition: border-color 0.25s;
+}
+.radio::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: var(--accent-strong);
+  transform: scale(0);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .selected .radio {
-  border: 4px solid #507d51;
+  border-color: var(--accent-strong);
+}
+.selected .radio::after {
+  transform: scale(1);
 }
 .error {
   display: flex;
@@ -312,12 +498,13 @@ input::placeholder {
   gap: 10px;
   font-size: 12px;
   line-height: 1.6;
-  background: #fff0e8;
-  border: 1px solid #e9cec1;
-  color: #986343;
+  background: var(--error);
+  border: 1px solid var(--error-border);
+  color: var(--error-ink);
   border-radius: 12px;
   padding: 14px;
   margin: 8px 0;
+  animation: drop 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 .error button {
   margin-left: auto;
@@ -329,7 +516,7 @@ input::placeholder {
 footer {
   text-align: center;
   margin: 28px 0 0;
-  color: #a3ac9d;
+  color: var(--faint);
   font-size: 9px;
   line-height: 1.5;
 }
@@ -360,9 +547,73 @@ footer p {
   }
 }
 
-input[type="url"] {
-  min-height: 44px;
+/* A fast attack, then the ink settles: the press-and-lift of a brush stroke. */
+@keyframes write {
+  from {
+    --brush: 0%;
+    opacity: 0.55;
+  }
+  to {
+    --brush: 130%;
+    opacity: 1;
+  }
 }
-.import-button {
-  min-height: 44px;
+/* Punctuation lands like the brush tip touching down. */
+@keyframes press {
+  from {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.9);
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+/* A single amber halo, the sunrise of the app icon, confirms the connection. */
+@keyframes dawn {
+  from {
+    box-shadow:
+      0 0 0 10px var(--power-on-ring),
+      0 0 0 11px var(--power-on-ring-edge),
+      0 0 0 11px rgba(var(--dawn), 0.55);
+  }
+  to {
+    box-shadow:
+      0 0 0 10px var(--power-on-ring),
+      0 0 0 11px var(--power-on-ring-edge),
+      0 0 0 36px rgba(var(--dawn), 0);
+  }
+}
+@keyframes lift {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes drop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
