@@ -2,6 +2,11 @@
 
 - Fix startup on current iOS simulators and add the Oneday paper-boat app icon with dark and tinted variants.
 - Add an iOS prototype with Clash subscription import, node selection, and a personally signed VPN extension for VLESS + REALITY and Hysteria2.
+- Import vless:// and hysteria2:// node links alongside subscriptions, skipping links of unsupported types.
+- Add a dark appearance that follows the system setting, including the launch screen.
+- Write the home verse stroke by stroke on first launch, replay it quickly afterwards, and finish it on tap.
+- Keep the selected node when refreshing a subscription.
+- Fix a blank screen when returning to the app after iOS reclaims its web content in the background.
 
 ## v2.5.8
 

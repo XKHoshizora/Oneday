@@ -17,7 +17,8 @@ final class OnedayViewController: UIViewController, WKNavigationDelegate {
         webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.isOpaque = false
-        webView.backgroundColor = UIColor(red: 0.95, green: 0.96, blue: 0.93, alpha: 1)
+        // Also the launch screen color; both match the page's --bg in each appearance.
+        webView.backgroundColor = UIColor(named: "Background")
         webView.navigationDelegate = self
         view.addSubview(webView)
         webView.load(URLRequest(url: URL(string: "oneday://app/index.html")!))
@@ -27,6 +28,11 @@ final class OnedayViewController: UIViewController, WKNavigationDelegate {
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         let url = navigationAction.request.url
         decisionHandler(url?.scheme == "oneday" && url?.host == "app" ? .allow : .cancel)
+    }
+
+    // iOS reclaims the web content process of backgrounded apps, which leaves an empty page.
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        webView.reload()
     }
 
     fileprivate func invoke(_ message: WKScriptMessage) async throws -> Any {
