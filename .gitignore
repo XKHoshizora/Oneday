@@ -17,3 +17,13 @@ target
 .vfox
 .claude
 .zed
+
+# Oneday iOS build products and local signing settings
+ios/Frameworks/
+ios/Signing.local.xcconfig
+ios/Oneday.xcodeproj/
+ios/build/
+ios/build-simulator/
+ios/App/Resources/Web/
+mobile/node_modules/
+mobile/.vite/

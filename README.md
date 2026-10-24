@@ -12,7 +12,9 @@ Oneday is an early-stage native iOS proxy client project for personal use.
 
 ## Status
 
-Planning and prototyping. No installable app has been released yet. The iOS foundation is being evaluated before implementation begins.
+An iOS prototype based on **Clash Verge Rev v2.5.8** is under development. The stable desktop source and history are preserved in this repository. The mobile interface is in `mobile/`; the Swift host and Packet Tunnel extension are in `ios/`.
+
+See [iOS build and signing instructions](docs/ONEDAY-IOS.md) and [upstream versions and attribution](docs/ONEDAY-UPSTREAM.md). The original desktop project's introduction is preserved in [README.upstream.md](README.upstream.md).
 
 ## Initial goals
 
@@ -20,4 +22,8 @@ Planning and prototyping. No installable app has been released yet. The iOS foun
 - Support VLESS + REALITY and Hysteria2.
 - Build and sign the app with your own Apple Developer account.
 
-Upstream dependencies, pinned versions, licenses, and attribution will be documented as components are selected and integrated.
+The first prototype uses inline Clash nodes with a global connection. Simulator checks cover the interface and subscription processing; system VPN traffic requires validation on a signed physical iPhone. Provider-only subscriptions and desktop feature parity are outside the initial prototype.
+
+## License
+
+GPL-3.0-only. See [LICENSE](LICENSE) and the pinned component notices in the iOS resources.
