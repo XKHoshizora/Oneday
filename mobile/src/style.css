@@ -71,26 +71,37 @@ header {
 }
 .connection {
   text-align: center;
-  padding: 44px 0 26px;
+  padding: 40px 0 26px;
+}
+.verse {
+  display: inline-block;
+  writing-mode: vertical-rl;
+  text-align: start;
+  height: max-content;
 }
 .eyebrow {
-  font-size: 10px;
-  letter-spacing: 5px;
-  color: #819287;
-  margin: 0 0 15px;
+  font-size: 15px;
+  line-height: 1;
+  letter-spacing: 0.32em;
+  color: #5d6f64;
+  margin: 0;
+  margin-block-end: 18px;
 }
 h1 {
-  font-size: 39px;
-  line-height: 1.35;
-  letter-spacing: 3px;
-  font-weight: 550;
+  font-size: 44px;
+  line-height: 1.5;
+  letter-spacing: 0.1em;
+  font-weight: 400;
   margin: 0;
+  white-space: nowrap;
 }
 .intro {
-  color: #829086;
-  font-size: 12px;
-  letter-spacing: 1px;
-  margin: 15px 0 0;
+  font-size: 15px;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  color: #5d6f64;
+  margin: 0;
+  margin-block-start: 20px;
 }
 .power {
   display: flex;

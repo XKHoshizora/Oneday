@@ -130,13 +130,15 @@ export function App() {
         <span className="edition">iOS 原型</span>
       </header>
       <section className="connection">
-        <p className="eyebrow">直到有一天</p>
-        <h1>
-          愿你不再
-          <br />
-          需要连接。
-        </h1>
-        <p className="intro">在那之前，让连接简单一点。</p>
+        <div className="verse">
+          <p className="eyebrow">直到有一天</p>
+          <h1>
+            愿你不再
+            <br />
+            需要连接。
+          </h1>
+          <p className="intro">在那之前，让连接简单一点。</p>
+        </div>
         <button
           className={`power ${connected ? 'active' : ''}`}
           onClick={toggle}
