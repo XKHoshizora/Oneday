@@ -34,6 +34,22 @@ final class TunnelController {
 
     var canChangeProfile: Bool { status == "disconnected" || status == "invalid" }
 
+    var connectedAt: Date? { manager?.connection.status == .connected ? manager?.connection.connectedDate : nil }
+
+    func traffic() async -> [String: Int] {
+        guard let session = manager?.connection as? NETunnelProviderSession, session.status == .connected else { return [:] }
+        return await withCheckedContinuation { continuation in
+            do {
+                try session.sendProviderMessage(Data("traffic".utf8)) { data in
+                    let json = data.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] } ?? [:]
+                    continuation.resume(returning: ["up": json["up"] as? Int ?? 0, "down": json["down"] as? Int ?? 0])
+                }
+            } catch {
+                continuation.resume(returning: [:])
+            }
+        }
+    }
+
     func connect(configuration: String) async throws {
 #if targetEnvironment(simulator)
         throw OnedayError.message("模拟器可测试订阅和界面；系统 VPN 流量转发需要在签名后的 iPhone 上验证。")

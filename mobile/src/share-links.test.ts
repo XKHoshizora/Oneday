@@ -1,15 +1,15 @@
 import { load } from 'js-yaml'
 import { describe, expect, it } from 'vitest'
 
-import { parseNodes, runtimeConfig } from './profile'
-import { parseShareLinks, shareLinksToYaml } from './share-links'
+import { nodesToYaml, parseNodes, runtimeConfig } from './profile'
+import { mergeLinks, parseShareLinks } from './share-links'
 
 const reality =
   'vless://00000000-0000-4000-8000-000000000001@203.0.113.7:443?encryption=none&flow=xtls-rprx-vision&security=reality&sni=www.example.org&fp=chrome&pbk=test-Public_key&sid=0123456789abcdef&type=tcp&headerType=none&spx=%2F#%E8%8A%82%E7%82%B9-Reality'
 
 describe('share link import', () => {
   it('maps a VLESS REALITY link to the outbound a Clash subscription would provide', () => {
-    const { yaml } = shareLinksToYaml(reality)
+    const yaml = nodesToYaml(parseShareLinks(reality).nodes)
     expect(parseNodes(yaml)).toEqual([
       {
         name: '节点-Reality',
@@ -26,10 +26,11 @@ describe('share link import', () => {
         'reality-opts': {
           'public-key': 'test-Public_key',
           'short-id': '0123456789abcdef',
+          'support-x25519mlkem768': true,
         },
       },
     ])
-    const runtime = load(runtimeConfig(yaml, '节点-Reality')) as {
+    const runtime = load(runtimeConfig(parseNodes(yaml), '节点-Reality')) as {
       proxies: unknown
     }
     expect(runtime.proxies).toEqual(parseNodes(yaml))
@@ -67,6 +68,20 @@ describe('share link import', () => {
       'Tokyo Hy2',
     ])
     expect(skipped).toEqual(['vmess://'])
+    expect(
+      mergeLinks(
+        nodes,
+        parseShareLinks(reality.replace('sid=0123456789abcdef', 'sid=ab'))
+          .nodes,
+      ).map((node) => [
+        node.name,
+        (node['reality-opts'] as { 'short-id'?: string })?.['short-id'],
+      ]),
+    ).toEqual([
+      ['节点-Reality', 'ab'],
+      ['节点-Reality 2', '0123456789abcdef'],
+      ['Tokyo Hy2', undefined],
+    ])
     expect(() =>
       parseShareLinks('vmess://eyJhZGQiOiJleGFtcGxlLmNvbSJ9'),
     ).toThrow('vmess://')

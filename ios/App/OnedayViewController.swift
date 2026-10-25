@@ -1,3 +1,4 @@
+import NetworkExtension
 import UIKit
 import WebKit
 
@@ -7,6 +8,8 @@ final class OnedayViewController: UIViewController, WKNavigationDelegate {
     private let subscriptions = SubscriptionClient()
     private var webView: WKWebView!
     private let assets = AssetHandler()
+    private var statusObserver: NSObjectProtocol?
+    private var lastStatus = NEVPNStatus.invalid
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -23,6 +26,16 @@ final class OnedayViewController: UIViewController, WKNavigationDelegate {
         view.addSubview(webView)
         webView.load(URLRequest(url: URL(string: "oneday://app/index.html")!))
         Task { try? await tunnel.load() }
+        statusObserver = NotificationCenter.default.addObserver(forName: .NEVPNStatusDidChange, object: nil, queue: .main) { [weak self] note in
+            guard let status = (note.object as? NEVPNConnection)?.status else { return }
+            MainActor.assumeIsolated { self?.statusChanged(status) }
+        }
+    }
+
+    // A single tap of feedback marks the moment the tunnel comes up, matching the page's sunrise.
+    private func statusChanged(_ status: NEVPNStatus) {
+        if status == .connected, lastStatus == .connecting { UINotificationFeedbackGenerator().notificationOccurred(.success) }
+        lastStatus = status
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
@@ -45,20 +58,32 @@ final class OnedayViewController: UIViewController, WKNavigationDelegate {
         case "getState":
             var result: [String: Any] = ["status": tunnel.status, "tunnelAvailable": tunnel.isSupported]
             if let data = try OnedayStore.read("profile.json") { result["profile"] = try JSONSerialization.jsonObject(with: data) }
+            if let date = tunnel.connectedAt { result["connectedAt"] = date.timeIntervalSince1970 * 1000 }
             if tunnel.isSupported, let data = try OnedayStore.read("last-error.txt"), let error = String(data: data, encoding: .utf8), !error.isEmpty { result["lastError"] = error }
             return result
         case "fetchSubscription":
             guard let url = args["url"] as? String else { throw OnedayError.message("Missing subscription URL.") }
             return ["content": try await subscriptions.fetch(url)]
         case "saveProfile":
-            guard tunnel.canChangeProfile, let profile = args["profile"] as? [String: Any], let yaml = profile["yaml"] as? String, !yaml.isEmpty,
-                  yaml.utf8.count <= SubscriptionClient.maximumBytes else { throw OnedayError.message("Disconnect first and import a valid profile under 4 MB.") }
-            try OnedayStore.write(JSONSerialization.data(withJSONObject: profile), to: "profile.json")
+            guard tunnel.canChangeProfile, let profile = args["profile"] as? [String: Any], let sources = profile["sources"] as? [[String: Any]],
+                  !sources.isEmpty, sources.allSatisfy({ ($0["yaml"] as? String)?.isEmpty == false }) else {
+                throw OnedayError.message("Disconnect first and import a valid profile.")
+            }
+            let data = try JSONSerialization.data(withJSONObject: profile)
+            // Each source is capped when imported; this bounds several of them together.
+            guard data.count <= SubscriptionClient.maximumBytes * 2 else { throw OnedayError.message("Saved nodes would exceed 8 MB.") }
+            try OnedayStore.write(data, to: "profile.json")
             return true
         case "connect":
             guard let configuration = args["configuration"] as? String, configuration.utf8.count <= SubscriptionClient.maximumBytes else { throw OnedayError.message("Missing or oversized VPN configuration.") }
             try await tunnel.connect(configuration: configuration)
             return true
+        case "deleteProfile":
+            guard tunnel.canChangeProfile else { throw OnedayError.message("Disconnect before deleting nodes.") }
+            try OnedayStore.remove("profile.json")
+            try OnedayStore.remove("runtime.yaml")
+            return true
+        case "getTraffic": return await tunnel.traffic()
         case "disconnect": tunnel.disconnect(); return true
         default: throw OnedayError.message("Unsupported app operation.")
         }

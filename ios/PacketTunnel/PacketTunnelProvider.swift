@@ -66,6 +66,11 @@ final class PacketTunnelProvider: NEPacketTunnelProvider, ClashPlatformInterface
         coreQueue.async { [self] in cleanup(); completionHandler() }
     }
 
+    // The app's only message is a poll for the live speed readout.
+    override func handleAppMessage(_ messageData: Data, completionHandler: ((Data?) -> Void)?) {
+        coreQueue.async { [self] in completionHandler?(service == nil ? nil : Data(ClashTrafficJSON().utf8)) }
+    }
+
     private func cleanup() {
         try? service?.close()
         service = nil

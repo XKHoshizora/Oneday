@@ -1,13 +1,27 @@
-import { type CSSProperties, useEffect, useRef, useState } from 'react'
+import {
+  type CSSProperties,
+  Fragment,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 
 import { callNative, type AppState } from './bridge'
+import { Power } from './Power'
 import {
-  parseNodes,
-  runtimeConfig,
   type ClashNode,
+  type Group,
+  groupNodes,
+  nodesToYaml,
+  normalizeProfile,
+  parseNodes,
   type Profile,
+  runtimeConfig,
+  type Source,
+  standaloneName,
 } from './profile'
-import { shareLinksToYaml } from './share-links'
+import { mergeLinks, parseShareLinks } from './share-links'
+import { SwipeRow } from './SwipeRow'
 import { Verse } from './Verse'
 
 const statusText: Record<string, string> = {
@@ -19,24 +33,74 @@ const statusText: Record<string, string> = {
   invalid: '未连接',
 }
 
+function formatRate(bytes: number) {
+  if (bytes < 1024) return `${Math.round(bytes)} B/s`
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB/s`
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB/s`
+}
+
+function formatDuration(milliseconds: number) {
+  const seconds = Math.max(0, Math.floor(milliseconds / 1000))
+  const clock = [Math.floor(seconds / 60) % 60, seconds % 60]
+    .map((part) => String(part).padStart(2, '0'))
+    .join(':')
+  return seconds >= 3600 ? `${Math.floor(seconds / 3600)}:${clock}` : clock
+}
+
+function protocolLabel(node: ClashNode) {
+  return node.type === 'vless' && node['reality-opts']
+    ? 'VLESS + REALITY'
+    : node.type.toUpperCase()
+}
+
+function groupTitle(source: Source) {
+  return source.kind === 'subscription' ? `订阅 · ${source.name}` : source.name
+}
+
 export function App() {
   const [state, setState] = useState<AppState>({ status: 'disconnected' })
   const [profile, setProfile] = useState<Profile>()
-  const [nodes, setNodes] = useState<ClashNode[]>([])
+  const [groups, setGroups] = useState<Group[]>([])
   const [selected, setSelected] = useState('')
   const [url, setURL] = useState('')
   const [busy, setBusy] = useState(false)
   // Only connect and disconnect spin the power button; imports also set busy.
   const [toggling, setToggling] = useState(false)
   const [error, setError] = useState('')
-  // Bumped on each import so the profile and node list replay their entrance.
+  // Bumped on each import so the node list replays its entrance.
   const [revision, setRevision] = useState(0)
+  const [adding, setAdding] = useState(false)
+  const [clearing, setClearing] = useState(false)
+  const [traffic, setTraffic] = useState({ up: 0, down: 0 })
+  const [now, setNow] = useState(() => Date.now())
   const fileInputRef = useRef<HTMLInputElement>(null)
   const connected =
     state.status === 'connected' || state.status === 'reasserting'
   const transition =
     state.status === 'connecting' || state.status === 'disconnecting'
+  const locked = busy || connected || transition
   const statusLabel = busy ? '请稍候' : statusText[state.status] || '未连接'
+  const sources = profile?.sources ?? []
+  const nodes = groups.flatMap((group) => group.nodes)
+
+  useEffect(() => {
+    if (!connected) return
+    let active = true
+    const poll = async () => {
+      const next = await callNative<{ up?: number; down?: number }>(
+        'getTraffic',
+      ).catch(() => ({}) as { up?: number; down?: number })
+      if (!active) return
+      setTraffic({ up: next.up ?? 0, down: next.down ?? 0 })
+      setNow(Date.now())
+    }
+    void poll()
+    const timer = window.setInterval(poll, 1000)
+    return () => {
+      active = false
+      window.clearInterval(timer)
+    }
+  }, [connected])
 
   useEffect(() => {
     let active = true
@@ -54,12 +118,17 @@ export function App() {
       .then((next) => {
         if (!active) return
         setState(next)
-        if (next.profile) {
-          const items = parseNodes(next.profile.yaml)
-          setProfile(next.profile)
-          setNodes(items)
-          setSelected(next.profile.selectedNode || items[0].name)
-        }
+        const saved = normalizeProfile(next.profile)
+        if (!saved) return
+        const items = groupNodes(saved.sources)
+        const all = items.flatMap((group) => group.nodes)
+        setProfile(saved)
+        setGroups(items)
+        setSelected(
+          all.some((node) => node.name === saved.selectedNode)
+            ? (saved.selectedNode as string)
+            : all[0].name,
+        )
       })
       .catch((failure) => {
         if (active)
@@ -76,18 +145,49 @@ export function App() {
     }
   }, [])
 
-  async function save(yaml: string, name: string, sourceURL?: string) {
-    const items = parseNodes(yaml)
-    const selectedNode = items.some((node) => node.name === selected)
-      ? selected
-      : items[0].name
-    const next: Profile = { yaml, name, sourceURL, selectedNode }
-    await callNative('saveProfile', { profile: next })
-    setProfile(next)
-    setNodes(items)
-    setSelected(selectedNode)
-    setURL('')
-    setRevision((value) => value + 1)
+  // iOS keeps fixed elements behind the keyboard, so the sheet is lifted by its height.
+  useEffect(() => {
+    const viewport = window.visualViewport
+    if (!adding || !viewport) return
+    const root = document.documentElement
+    const lift = () =>
+      root.style.setProperty(
+        '--keyboard',
+        `${Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)}px`,
+      )
+    lift()
+    viewport.addEventListener('resize', lift)
+    viewport.addEventListener('scroll', lift)
+    return () => {
+      viewport.removeEventListener('resize', lift)
+      viewport.removeEventListener('scroll', lift)
+      root.style.removeProperty('--keyboard')
+    }
+  }, [adding])
+
+  async function commit(next: Source[], prefer = selected, imported = true) {
+    if (next.length === 0) {
+      await callNative('deleteProfile')
+      setProfile(undefined)
+      setGroups([])
+      setSelected('')
+    } else {
+      const items = groupNodes(next)
+      const all = items.flatMap((group) => group.nodes)
+      const selectedNode = all.some((node) => node.name === prefer)
+        ? prefer
+        : all[0].name
+      const saved: Profile = { sources: next, selectedNode }
+      await callNative('saveProfile', { profile: saved })
+      setProfile(saved)
+      setGroups(items)
+      setSelected(selectedNode)
+    }
+    if (imported) {
+      setURL('')
+      setAdding(false)
+      setRevision((value) => value + 1)
+    }
   }
 
   async function action(task: () => Promise<void>) {
@@ -105,18 +205,59 @@ export function App() {
   async function importInput(input: string) {
     await action(async () => {
       if (!/^https?:\/\//i.test(input)) {
-        const { yaml, skipped } = shareLinksToYaml(input)
-        await save(yaml, '节点链接')
+        const { nodes: added, skipped } = parseShareLinks(input)
+        const current = sources.find((source) => source.kind === 'standalone')
+        const standalone: Source = {
+          id: 'standalone',
+          kind: 'standalone',
+          name: standaloneName,
+          yaml: nodesToYaml(
+            mergeLinks(current ? parseNodes(current.yaml) : [], added),
+          ),
+        }
+        await commit(
+          current
+            ? sources.map((source) =>
+                source === current ? standalone : source,
+              )
+            : [...sources, standalone],
+          added[0].name,
+        )
         if (skipped.length > 0)
           setError(`已跳过暂不支持的 ${skipped.join('、')} 链接。`)
         return
       }
-      const result = await callNative<{ content: string }>(
+      const { content } = await callNative<{ content: string }>(
         'fetchSubscription',
         { url: input },
       )
-      await save(result.content, '我的订阅', input)
+      const current = sources.find((source) => source.url === input)
+      const count = sources.filter((source) => source.kind === 'subscription')
+      await commit(
+        current
+          ? sources.map((source) =>
+              source === current ? { ...source, yaml: content } : source,
+            )
+          : [
+              ...sources,
+              {
+                id: `subscription-${Date.now()}`,
+                kind: 'subscription',
+                name: count.length ? `订阅 ${count.length + 1}` : '我的订阅',
+                url: input,
+                yaml: content,
+              },
+            ],
+      )
     })
+  }
+
+  function remove(task: () => Promise<void>) {
+    if (connected || transition) {
+      setError('断开连接后才能删除节点。')
+      return
+    }
+    void action(task)
   }
 
   async function toggle() {
@@ -132,7 +273,7 @@ export function App() {
         profile: { ...profile, selectedNode: selected },
       })
       await callNative('connect', {
-        configuration: runtimeConfig(profile.yaml, selected),
+        configuration: runtimeConfig(nodes, selected),
         nodeName: selected,
       })
       setState((current) => ({ ...current, status: 'connecting' }))
@@ -140,82 +281,9 @@ export function App() {
     setToggling(false)
   }
 
-  return (
-    <main>
-      <header>
-        <div className="wordmark">
-          <span className="sun" aria-hidden="true" />
-          有朝<span className="roman">Oneday</span>
-        </div>
-      </header>
-      <section className="connection">
-        <Verse />
-        <button
-          className={`power ${connected ? 'active' : ''} ${toggling || transition ? 'pending' : ''}`}
-          onClick={toggle}
-          disabled={busy || transition || (!profile && !connected)}
-          aria-label={connected ? '断开连接' : '连接 VPN'}
-        >
-          <svg viewBox="0 0 48 48" aria-hidden="true">
-            <path d="M24 6v17M13 12a17 17 0 1 0 22 0" />
-          </svg>
-        </button>
-        <div className="connection-status" role="status">
-          <span className={connected ? 'dot on' : 'dot'} />
-          <span key={statusLabel} className="status-text">
-            {statusLabel}
-          </span>
-        </div>
-        {state.tunnelAvailable === false && (
-          <p className="route-label">
-            模拟器模式 · 可测试订阅
-            <br />
-            VPN 连接需在 iPhone 上验证
-          </p>
-        )}
-        {connected && <p className="route-label">全局连接 · {selected}</p>}
-      </section>
-
-      {error && (
-        <div className="error" role="alert">
-          {error}
-          <button onClick={() => setError('')} aria-label="关闭提示">
-            ×
-          </button>
-        </div>
-      )}
-
-      <section className="card">
-        <div className="section-title">
-          <h2>配置</h2>
-          {profile?.sourceURL && (
-            <button
-              className="text-button"
-              disabled={busy || connected || transition}
-              onClick={() =>
-                profile.sourceURL && importInput(profile.sourceURL)
-              }
-            >
-              更新
-            </button>
-          )}
-        </div>
-        {profile ? (
-          <div
-            key={revision}
-            className={revision ? 'profile-summary fresh' : 'profile-summary'}
-          >
-            <span className="profile-icon">↗</span>
-            <div>
-              <strong>{profile.name}</strong>
-              <p>{nodes.length} 个节点 · 仅保存在本机</p>
-            </div>
-          </div>
-        ) : (
-          <p className="muted">
-            添加 Clash / Mihomo 订阅，或粘贴 vless:// 与 hysteria2:// 节点链接。
-          </p>
-        )}
+  function addForm(autoFocus: boolean) {
+    return (
+      <>
         <form
           onSubmit={(event) => {
             event.preventDefault()
@@ -234,74 +302,279 @@ export function App() {
             onChange={(event) => setURL(event.target.value)}
             autoCapitalize="none"
             autoCorrect="off"
+            autoFocus={autoFocus}
             spellCheck={false}
-            disabled={busy || connected || transition}
+            disabled={locked}
           />
-          <button
-            className="import-button"
-            disabled={busy || connected || transition || !url.trim()}
-          >
+          <button className="import-button" disabled={locked || !url.trim()}>
             导入
           </button>
         </form>
-        <input
-          ref={fileInputRef}
-          className="sr-only"
-          type="file"
-          accept=".yaml,.yml,text/yaml,application/yaml"
-          onChange={(event) => {
-            const file = event.target.files?.[0]
-            if (file)
-              void action(async () => {
-                if (file.size > 4 * 1024 * 1024)
-                  throw new Error('配置文件不能超过 4 MB。')
-                await save(await file.text(), file.name)
-              })
-            event.target.value = ''
-          }}
-        />
         <button
           className="text-button file-button"
-          disabled={busy || connected || transition}
+          disabled={locked}
           onClick={() => fileInputRef.current?.click()}
         >
           或从文件导入 ↗
         </button>
+      </>
+    )
+  }
+
+  return (
+    <main>
+      <header>
+        <div className="wordmark">
+          <span className="sun" aria-hidden="true" />
+          有朝<span className="roman">Oneday</span>
+        </div>
+      </header>
+      <section className="connection">
+        <Verse />
+        <Power
+          connected={connected}
+          pending={toggling || transition}
+          disabled={busy || transition || (!profile && !connected)}
+          rate={traffic.up + traffic.down}
+          label={connected ? '断开连接' : '连接 VPN'}
+          onToggle={toggle}
+        />
+        <div className="connection-status" role="status">
+          <span className={connected ? 'dot on' : 'dot'} />
+          <span key={statusLabel} className="status-text">
+            {statusLabel}
+          </span>
+        </div>
+        {state.tunnelAvailable === false && (
+          <p className="route-label">
+            模拟器模式 · 可测试订阅
+            <br />
+            VPN 连接需在 iPhone 上验证
+          </p>
+        )}
+        {connected && (
+          <>
+            <p className="speed">
+              <span>
+                <span className="speed-arrow">↓</span>{' '}
+                {formatRate(traffic.down)}
+              </span>
+              <span>
+                <span className="speed-arrow">↑</span> {formatRate(traffic.up)}
+              </span>
+            </p>
+            <p className="route-label">
+              全局连接 · {selected}
+              {state.connectedAt
+                ? ` · ${formatDuration(now - state.connectedAt)}`
+                : ''}
+            </p>
+          </>
+        )}
       </section>
 
-      {nodes.length > 0 && (
+      {error && (
+        <div className="error" role="alert">
+          {error}
+          <button onClick={() => setError('')} aria-label="关闭提示">
+            ×
+          </button>
+        </div>
+      )}
+
+      {groups.length === 0 ? (
+        <section className="card">
+          <div className="section-title">
+            <h2>添加节点</h2>
+          </div>
+          <p className="muted">
+            添加 Clash / Mihomo 订阅，或粘贴 vless:// 与 hysteria2:// 节点链接。
+          </p>
+          {!adding && addForm(false)}
+        </section>
+      ) : (
         <section
           key={revision}
           className={revision ? 'card nodes fresh' : 'card nodes'}
         >
           <div className="section-title">
             <h2>选择节点</h2>
-            <span className="muted">{nodes.length}</span>
+            <span className="section-actions">
+              <span className="muted">{nodes.length}</span>
+              <button
+                className="add-button"
+                aria-label="添加节点"
+                disabled={locked}
+                onClick={() => setAdding(true)}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </button>
+            </span>
           </div>
-          {nodes.map((node, index) => (
-            <button
-              key={node.name}
-              className={`node ${selected === node.name ? 'selected' : ''}`}
-              style={{ '--i': Math.min(index, 8) } as CSSProperties}
-              disabled={busy || connected || transition}
-              onClick={() => setSelected(node.name)}
-            >
-              <span className="node-symbol">
-                {node.type === 'hysteria2' ? '≈' : '↗'}
-              </span>
-              <span className="node-info">
-                <strong>{node.name}</strong>
-                <small>
-                  {node.type === 'vless' && node['reality-opts']
-                    ? 'VLESS + REALITY'
-                    : node.type.toUpperCase()}
-                </small>
-              </span>
-              <span className="radio" />
-            </button>
+          {groups.map(({ source, nodes: members }) => (
+            <div key={source.id} className="group">
+              <SwipeRow
+                label={source.kind === 'subscription' ? '删除订阅' : '全部删除'}
+                locked={connected || transition}
+                onDelete={() =>
+                  remove(() =>
+                    commit(
+                      sources.filter((item) => item !== source),
+                      selected,
+                      false,
+                    ),
+                  )
+                }
+              >
+                <div className="group-head">
+                  <span>{groupTitle(source)}</span>
+                  <span>
+                    {members.length}
+                    {source.url && (
+                      <button
+                        className="text-button"
+                        disabled={locked}
+                        onClick={() => source.url && importInput(source.url)}
+                      >
+                        更新
+                      </button>
+                    )}
+                  </span>
+                </div>
+              </SwipeRow>
+              {members.map((node, index) => {
+                const row = (
+                  <button
+                    className={`node ${selected === node.name ? 'selected' : ''}`}
+                    style={{ '--i': Math.min(index, 8) } as CSSProperties}
+                    disabled={locked}
+                    onClick={() => setSelected(node.name)}
+                  >
+                    <span className="node-symbol">
+                      {node.type === 'hysteria2' ? '≈' : '↗'}
+                    </span>
+                    <span className="node-info">
+                      <strong>{node.name}</strong>
+                      <small>{protocolLabel(node)}</small>
+                    </span>
+                    <span className="radio" />
+                  </button>
+                )
+                return source.kind === 'standalone' ? (
+                  <SwipeRow
+                    key={node.name}
+                    label="删除"
+                    locked={connected || transition}
+                    onDelete={() =>
+                      remove(() => {
+                        const remaining = parseNodes(source.yaml).filter(
+                          (_, position) => position !== index,
+                        )
+                        return commit(
+                          remaining.length
+                            ? sources.map((item) =>
+                                item === source
+                                  ? { ...item, yaml: nodesToYaml(remaining) }
+                                  : item,
+                              )
+                            : sources.filter((item) => item !== source),
+                          selected,
+                          false,
+                        )
+                      })
+                    }
+                  >
+                    {row}
+                  </SwipeRow>
+                ) : (
+                  <Fragment key={node.name}>{row}</Fragment>
+                )
+              })}
+            </div>
           ))}
         </section>
       )}
+
+      {groups.length > 0 && (
+        <div className="clear-all">
+          {clearing ? (
+            <p className="clear-confirm">
+              清除所有订阅和独立节点？
+              <button
+                className="text-button"
+                onClick={() => setClearing(false)}
+              >
+                取消
+              </button>
+              <button
+                className="danger-button"
+                onClick={() => {
+                  setClearing(false)
+                  remove(() => commit([], '', false))
+                }}
+              >
+                清除
+              </button>
+            </p>
+          ) : (
+            <button
+              className="text-button danger-text"
+              onClick={() =>
+                connected || transition
+                  ? setError('断开连接后才能删除节点。')
+                  : setClearing(true)
+              }
+            >
+              清除全部节点
+            </button>
+          )}
+        </div>
+      )}
+
+      <input
+        ref={fileInputRef}
+        className="sr-only"
+        type="file"
+        accept=".yaml,.yml,text/yaml,application/yaml"
+        onChange={(event) => {
+          const file = event.target.files?.[0]
+          if (file)
+            void action(async () => {
+              if (file.size > 4 * 1024 * 1024)
+                throw new Error('配置文件不能超过 4 MB。')
+              const yaml = await file.text()
+              await commit([
+                ...sources,
+                {
+                  id: `file-${Date.now()}`,
+                  kind: 'file',
+                  name: file.name,
+                  yaml,
+                },
+              ])
+            })
+          event.target.value = ''
+        }}
+      />
+
+      {adding && (
+        <div
+          className="sheet-layer"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setAdding(false)
+          }}
+        >
+          <section className="sheet" role="dialog" aria-label="添加节点">
+            <span className="sheet-handle" aria-hidden="true" />
+            <h2>添加节点</h2>
+            <p className="muted">订阅会单独成组，节点链接加入「独立节点」。</p>
+            {addForm(true)}
+          </section>
+        </div>
+      )}
+
       <footer>
         <strong>有朝 · Oneday · いつか</strong>
         <p>基于 Clash Verge Rev 与 mihomo</p>

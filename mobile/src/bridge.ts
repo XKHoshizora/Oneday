@@ -1,9 +1,9 @@
-import type { Profile } from './profile'
-
 export type AppState = {
   status: string
   tunnelAvailable?: boolean
-  profile?: Profile
+  connectedAt?: number
+  // Saved before node groups, this can still be a single-source profile.
+  profile?: unknown
   lastError?: string
 }
 declare global {

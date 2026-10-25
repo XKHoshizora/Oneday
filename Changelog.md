@@ -7,6 +7,10 @@
 - Write the home verse stroke by stroke on first launch, replay it quickly afterwards, and finish it on tap.
 - Keep the selected node when refreshing a subscription.
 - Fix a blank screen when returning to the app after iOS reclaims its web content in the background.
+- Group nodes by subscription, file and 「独立节点」, add more from the + button, and delete single nodes, whole groups or everything.
+- Show live download and upload speed with the connected time, and animate the connect button through idle, connecting and connected.
+- Fix vless:// REALITY links that showed connected but carried no traffic on servers requiring post-quantum key exchange.
+- Reject subscriptions that redirect to local or private network addresses, or whose YAML references expand into an oversized configuration.
 
 ## v2.5.8
 
