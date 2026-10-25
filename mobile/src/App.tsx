@@ -145,26 +145,6 @@ export function App() {
     }
   }, [])
 
-  // iOS keeps fixed elements behind the keyboard, so the sheet is lifted by its height.
-  useEffect(() => {
-    const viewport = window.visualViewport
-    if (!adding || !viewport) return
-    const root = document.documentElement
-    const lift = () =>
-      root.style.setProperty(
-        '--keyboard',
-        `${Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)}px`,
-      )
-    lift()
-    viewport.addEventListener('resize', lift)
-    viewport.addEventListener('scroll', lift)
-    return () => {
-      viewport.removeEventListener('resize', lift)
-      viewport.removeEventListener('scroll', lift)
-      root.style.removeProperty('--keyboard')
-    }
-  }, [adding])
-
   async function commit(next: Source[], prefer = selected, imported = true) {
     if (next.length === 0) {
       await callNative('deleteProfile')
