@@ -30,15 +30,16 @@
   --power-on-ink: #e7efd9;
   --power-on-ring: #dfe8d5;
   --power-on-ring-edge: #cfdbc4;
-  --arc: #6f9b72;
+  --tide: 111, 155, 114;
   --radio-border: #cfd8c7;
   --dot: #a5afa2;
   --sun: #c6a66b;
   --sun-halo: #e7dfcc;
-  --dawn: 198, 166, 107;
   --error: #fff0e8;
   --error-border: #e9cec1;
   --error-ink: #986343;
+  --danger: #b4573a;
+  --scrim: rgba(21, 60, 52, 0.28);
   --focus: #b8cc92;
 
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
@@ -82,15 +83,15 @@
     --power-on-ink: #13271e;
     --power-on-ring: #1f2f27;
     --power-on-ring-edge: #2c4035;
-    --arc: #8fc08f;
+    --tide: 143, 192, 143;
     --radio-border: #34443c;
     --dot: #4f5c55;
     --sun: #d4b47a;
     --sun-halo: #3a3324;
-    --dawn: 212, 180, 122;
     --error: #2a1c16;
     --error-border: #4a3226;
     --error-ink: #e6b08f;
+    --scrim: rgba(0, 0, 0, 0.5);
     --focus: #6f8f56;
   }
 }
@@ -227,7 +228,6 @@ h1 > span {
   justify-content: center;
   width: 102px;
   height: 102px;
-  margin: 28px auto 20px;
   border: 1px solid var(--power-border);
   border-radius: 50%;
   background: var(--power);
@@ -252,7 +252,7 @@ h1 > span {
   position: absolute;
   inset: -12px;
   border-radius: 50%;
-  background: conic-gradient(from 0turn, transparent 0 55%, var(--arc));
+  background: conic-gradient(from 0turn, transparent 0 55%, var(--sun));
   -webkit-mask: radial-gradient(
     farthest-side,
     transparent calc(100% - 2px),
@@ -271,7 +271,21 @@ h1 > span {
   opacity: 1;
   animation: spin 1.2s linear infinite;
 }
+/* The lit state floods outward from the center instead of switching color at once. */
+.power::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  background: var(--power-on);
+  clip-path: circle(0% at 50% 50%);
+  transition: clip-path 0.52s cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+.power.active::before {
+  clip-path: circle(71% at 50% 50%);
+}
 .power svg {
+  position: relative;
   width: 38px;
   height: 38px;
   fill: none;
@@ -286,7 +300,50 @@ h1 > span {
   box-shadow:
     0 0 0 10px var(--power-on-ring),
     0 0 0 11px var(--power-on-ring-edge);
-  animation: dawn 1.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.power-zone {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 102px;
+  height: 102px;
+  margin: 28px auto 20px;
+}
+/* Still water before dawn: a slow breath around the button while it can be tapped. */
+.power-zone.idle::before {
+  content: "";
+  position: absolute;
+  inset: -11px;
+  border-radius: 50%;
+  border: 1px solid var(--power-border);
+  animation: breathe 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+.ripple,
+.sunrise {
+  position: absolute;
+  inset: -11px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.ripple {
+  border: 1.5px solid rgba(var(--tide), 0.9);
+}
+.sunrise {
+  border: 3px solid var(--sun);
+}
+.speed {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin: 10px 0 0;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  animation: rise 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.speed-arrow {
+  color: var(--label);
 }
 .connection-status {
   display: flex;
@@ -351,32 +408,6 @@ h2 {
 .text-button:active:not(:disabled) {
   opacity: 0.55;
 }
-.profile-summary {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 18px;
-}
-.profile-summary.fresh {
-  animation: lift 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-.profile-icon {
-  width: 33px;
-  height: 36px;
-  background: var(--chip);
-  border-radius: 9px;
-  display: grid;
-  place-items: center;
-  font-size: 22px;
-}
-.profile-summary strong {
-  font-size: 12px;
-}
-.profile-summary p {
-  font-size: 10px;
-  color: var(--muted);
-  margin: 4px 0 0;
-}
 form {
   display: flex;
   gap: 8px;
@@ -431,6 +462,153 @@ input::placeholder {
 .nodes.fresh .node {
   animation: rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   animation-delay: calc(var(--i) * 45ms + 80ms);
+}
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.add-button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--card-border);
+  border-radius: 50%;
+  background: var(--chip);
+  color: var(--ink);
+  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.add-button:active:not(:disabled) {
+  transform: scale(0.9);
+}
+.add-button svg,
+.swipe-delete svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 10px 0 4px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--label);
+}
+.section-title + .group .group-head {
+  min-height: 32px;
+  padding-top: 0;
+}
+.group-head .text-button {
+  margin-left: 10px;
+}
+/* A swiped row reveals an inset button that springs in, not a flat red strip. */
+.swipe-row {
+  position: relative;
+  overflow: hidden;
+}
+.swipe-content {
+  position: relative;
+  background: var(--card);
+  touch-action: pan-y;
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.swipe-delete {
+  position: absolute;
+  top: 6px;
+  right: 2px;
+  bottom: 6px;
+  width: 68px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 11px;
+  opacity: 0;
+  transform: scale(0.85);
+  transition:
+    opacity 0.2s,
+    transform 0.28s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+/* Group headers are short, so their delete sits on one line. */
+.group > .swipe-row:first-child .swipe-delete {
+  flex-direction: row;
+  width: auto;
+  padding: 0 12px;
+  gap: 5px;
+}
+.swipe-row.open .swipe-delete {
+  opacity: 1;
+  transform: none;
+}
+.clear-all {
+  margin: 4px 0 0;
+  text-align: center;
+}
+.danger-text {
+  color: var(--danger);
+  font-size: 12px;
+}
+.clear-confirm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--danger);
+}
+.danger-button {
+  border: 0;
+  border-radius: 8px;
+  padding: 5px 12px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 12px;
+}
+.sheet-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: var(--keyboard, 0px);
+  background: var(--scrim);
+  animation: fade 0.25s ease both;
+  transition: padding-bottom 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.sheet {
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 10px 24px calc(24px + env(safe-area-inset-bottom));
+  border-radius: 22px 22px 0 0;
+  background: var(--card);
+  animation: slide 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.sheet-handle {
+  display: block;
+  width: 36px;
+  height: 4px;
+  margin: 0 auto 14px;
+  border-radius: 2px;
+  background: var(--card-border);
+}
+.sheet .muted {
+  margin: 6px 0 14px;
 }
 .node-symbol {
   width: 32px;
@@ -574,19 +752,25 @@ footer p {
     transform: rotate(1turn);
   }
 }
-/* A single amber halo, the sunrise of the app icon, confirms the connection. */
-@keyframes dawn {
-  from {
-    box-shadow:
-      0 0 0 10px var(--power-on-ring),
-      0 0 0 11px var(--power-on-ring-edge),
-      0 0 0 11px rgba(var(--dawn), 0.55);
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0;
   }
-  to {
-    box-shadow:
-      0 0 0 10px var(--power-on-ring),
-      0 0 0 11px var(--power-on-ring-edge),
-      0 0 0 36px rgba(var(--dawn), 0);
+  50% {
+    transform: scale(1.16);
+    opacity: 1;
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes slide {
+  from {
+    transform: translateY(100%);
   }
 }
 @keyframes lift {

@@ -1,6 +1,4 @@
-import { dump } from 'js-yaml'
-
-import type { ClashNode } from './profile'
+import { type ClashNode, uniqueName } from './profile'
 
 const scheme =
   '(?:vless|hysteria2|hy2|vmess|trojan|ssr|ss|tuic|hysteria|socks5?|wireguard|anytls)://'
@@ -29,10 +27,7 @@ export function parseShareLinks(text: string): {
       continue
     }
     const node = protocol === 'vless' ? vless(link) : hysteria2(link)
-    let name = node.name
-    for (let index = 2; names.has(name); index++) name = `${node.name} ${index}`
-    names.add(name)
-    nodes.push({ ...node, name })
+    nodes.push({ ...node, name: uniqueName(node.name, names) })
   }
   if (nodes.length === 0)
     throw new Error(
@@ -43,15 +38,16 @@ export function parseShareLinks(text: string): {
   return { nodes, skipped: [...skipped] }
 }
 
-export function shareLinksToYaml(text: string): {
-  yaml: string
-  skipped: string[]
-} {
-  const { nodes, skipped } = parseShareLinks(text)
-  return {
-    yaml: dump({ proxies: nodes }, { noRefs: true, lineWidth: -1 }),
-    skipped,
-  }
+// A pasted link whose name is already listed replaces that node, so a corrected link
+// fixes the old entry instead of sitting next to it.
+export function mergeLinks(existing: ClashNode[], added: ClashNode[]) {
+  const pending = new Map(added.map((node) => [node.name, node]))
+  const merged = existing.map((node) => {
+    const replacement = pending.get(node.name)
+    pending.delete(node.name)
+    return replacement ?? node
+  })
+  return [...merged, ...pending.values()]
 }
 
 // Whitespace only belongs to a link inside its #name.
@@ -102,9 +98,12 @@ function vless(link: string): ClashNode {
   }
   if (security === 'reality') {
     if (!query.pbk) throw new Error('REALITY 链接缺少公钥（pbk）。')
+    // Links don't carry this flag. Xray clients offer X25519MLKEM768 by default and current
+    // REALITY servers fail authentication without it, but mihomo leaves it off unless set.
     node['reality-opts'] = {
       'public-key': query.pbk,
       'short-id': query.sid ?? '',
+      'support-x25519mlkem768': true,
     }
   }
 

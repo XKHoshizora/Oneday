@@ -36,6 +36,12 @@ enum OnedayStore {
         try protectedURL.setResourceValues(resource)
     }
 
+    static func remove(_ file: String) throws {
+        let url = try directory.appendingPathComponent(file)
+        guard FileManager.default.fileExists(atPath: url.path) else { return }
+        try FileManager.default.removeItem(at: url)
+    }
+
     static func writeError(_ error: Error?) {
         let text = error?.localizedDescription ?? ""
         try? write(Data(text.utf8), to: "last-error.txt")

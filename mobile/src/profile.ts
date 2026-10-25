@@ -6,11 +6,74 @@ export type ClashNode = Record<string, unknown> & {
   server: string
   port: number
 }
-export type Profile = {
+export type Source = {
+  id: string
+  kind: 'subscription' | 'file' | 'standalone'
   name: string
+  url?: string
   yaml: string
-  sourceURL?: string
-  selectedNode?: string
+}
+export type Profile = { sources: Source[]; selectedNode?: string }
+export type Group = { source: Source; nodes: ClashNode[] }
+
+export const standaloneName = '独立节点'
+
+// Profiles saved before node groups held one source; link imports were named 「节点链接」.
+export function normalizeProfile(saved: unknown): Profile | undefined {
+  if (!saved || typeof saved !== 'object') return undefined
+  const value = saved as Record<string, unknown>
+  if (Array.isArray(value.sources)) return value as Profile
+  if (typeof value.yaml !== 'string') return undefined
+  const name = typeof value.name === 'string' ? value.name : '配置'
+  const url = typeof value.sourceURL === 'string' ? value.sourceURL : undefined
+  const source: Source = url
+    ? {
+        id: 'subscription-1',
+        kind: 'subscription',
+        name,
+        url,
+        yaml: value.yaml,
+      }
+    : name === '节点链接'
+      ? {
+          id: 'standalone',
+          kind: 'standalone',
+          name: standaloneName,
+          yaml: value.yaml,
+        }
+      : { id: 'file-1', kind: 'file', name, yaml: value.yaml }
+  const selectedNode =
+    typeof value.selectedNode === 'string' ? value.selectedNode : undefined
+  return { sources: [source], selectedNode }
+}
+
+export function uniqueName(name: string, taken: Set<string>) {
+  let result = name
+  for (let index = 2; taken.has(result); index++) result = `${name} ${index}`
+  taken.add(result)
+  return result
+}
+
+// Node names key the runtime config, so a name repeated by a later group gets a suffix.
+// Independent nodes come last and give way to subscriptions and files.
+export function groupNodes(sources: Source[]): Group[] {
+  const taken = new Set<string>()
+  return [...sources]
+    .sort(
+      (a, b) =>
+        Number(a.kind === 'standalone') - Number(b.kind === 'standalone'),
+    )
+    .map((source) => ({
+      source,
+      nodes: parseNodes(source.yaml).map((node) => ({
+        ...node,
+        name: uniqueName(node.name, taken),
+      })),
+    }))
+}
+
+export function nodesToYaml(nodes: ClashNode[]) {
+  return dump({ proxies: nodes }, { noRefs: true, lineWidth: -1 })
 }
 
 export function parseNodes(yaml: string): ClashNode[] {
@@ -28,10 +91,13 @@ export function parseNodes(yaml: string): ClashNode[] {
       '配置中没有节点。当前原型需要包含 proxies 列表的 Clash 订阅。',
     )
   const names = new Set<string>()
+  // A YAML document has no more values than characters, so copying beyond its length
+  // means anchors are amplifying it.
+  const budget = { left: yaml.length }
   return proxies.map((value: unknown) => {
     if (!value || typeof value !== 'object' || Array.isArray(value))
       throw new Error('节点配置不完整。')
-    const node = value as ClashNode
+    const node = detach(value, budget, 0, new Set()) as ClashNode
     if (
       typeof node.name !== 'string' ||
       !node.name ||
@@ -48,8 +114,36 @@ export function parseNodes(yaml: string): ClashNode[] {
   })
 }
 
-export function runtimeConfig(yaml: string, selected: string): string {
-  const nodes = parseNodes(yaml)
+// Runtime serialization uses `noRefs`, which would expand shared or cyclic anchors in place.
+function detach(
+  value: unknown,
+  budget: { left: number },
+  depth: number,
+  path: Set<object>,
+): unknown {
+  if (--budget.left < 0 || depth > 16)
+    throw new Error('配置中的 YAML 引用过多或嵌套过深。')
+  if (value === null || typeof value !== 'object') return value
+  if (
+    !Array.isArray(value) &&
+    Object.getPrototypeOf(value) !== Object.prototype
+  )
+    return value
+  if (path.has(value)) throw new Error('配置中的 YAML 引用存在循环。')
+  path.add(value)
+  const copy = Array.isArray(value)
+    ? value.map((item) => detach(item, budget, depth + 1, path))
+    : Object.fromEntries(
+        Object.entries(value).map(([key, item]) => [
+          key,
+          detach(item, budget, depth + 1, path),
+        ]),
+      )
+  path.delete(value)
+  return copy
+}
+
+export function runtimeConfig(nodes: ClashNode[], selected: string): string {
   if (!nodes.some((node) => node.name === selected))
     throw new Error('请选择有效节点。')
   // Keep each outbound intact: REALITY, TLS and Hysteria2 extensions are core-owned.
