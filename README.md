@@ -15,7 +15,8 @@
   <a href="docs/ONEDAY-IOS.md">Build guide</a> ·
   <a href="docs/ONEDAY-UPSTREAM.md">Upstream and attribution</a> ·
   <a href="docs/ONEDAY-ICON.md">App icon</a> ·
-  <a href="LICENSE">GPL-3.0</a>
+  <a href="LICENSE">GPL-3.0</a> ·
+  <a href="https://github.com/sponsors/XKHoshizora">Sponsor</a>
 </p>
 
 > [!NOTE]
@@ -56,6 +57,12 @@ The simulator covers the interface and subscription handling; VPN traffic needs 
 - The selected node carries all traffic, with local networks direct. Rules, policy groups, scripts and geodata from desktop profiles are not imported.
 - Subscriptions that only reference proxy providers, without an inline `proxies` list, are not supported yet.
 - Node links are limited to `vless://` and `hysteria2://` (`hy2://`) for now; other link types in a paste are skipped with a notice.
+
+## Support Oneday
+
+Oneday is free and open source. Sponsorships pay the yearly Apple Developer Program fee that keeps TestFlight builds signed and coming, and the time that goes into keeping the project running.
+
+<a href="https://github.com/sponsors/XKHoshizora">Sponsor on GitHub</a> · 欢迎通过 GitHub Sponsors 支持有朝。
 
 ## Built on Clash Verge Rev
 
