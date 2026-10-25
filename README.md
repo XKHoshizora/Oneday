@@ -12,11 +12,19 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/sponsors/XKHoshizora">
+    <img src="./docs/readme/sponsor.svg" width="248" height="48" alt="Sponsor Oneday on GitHub · 支持有朝">
+  </a><br>
+  <sub>支持有朝 · Help keep TestFlight builds signed and development going.</sub>
+</p>
+
+<p align="center">
+  <a href="#what-it-does">Features</a> ·
   <a href="docs/ONEDAY-IOS.md">Build guide</a> ·
+  <a href="#support-oneday">Support Oneday</a> ·
   <a href="docs/ONEDAY-UPSTREAM.md">Upstream and attribution</a> ·
   <a href="docs/ONEDAY-ICON.md">App icon</a> ·
-  <a href="LICENSE">GPL-3.0</a> ·
-  <a href="https://github.com/sponsors/XKHoshizora">Sponsor</a>
+  <a href="LICENSE">GPL-3.0</a>
 </p>
 
 > [!NOTE]
@@ -30,6 +38,14 @@
 - **One switch.** Choose a node and connect. A Packet Tunnel extension runs mihomo with that node. While connected, the app shows live download and upload speed and how long you've been connected.
 - **Follows the system.** The interface switches between light and dark with iOS.
 - **Stays on the device.** Subscription URLs, credentials and runtime configuration are kept in the app's App Group storage. Subscriptions are fetched directly, without a third-party conversion service, and a subscription can't redirect the app to local or private network addresses.
+
+## Support Oneday
+
+Oneday is free and open source. Sponsorships pay the yearly Apple Developer Program fee that keeps TestFlight builds signed and coming, and the time that goes into keeping the project running.
+
+**[Become a monthly sponsor](https://github.com/sponsors/XKHoshizora?frequency=recurring)** · **[Make a one-time contribution](https://github.com/sponsors/XKHoshizora?frequency=one-time)**
+
+欢迎通过 GitHub Sponsors 支持有朝，帮助项目持续开发与维护。
 
 ## How it fits together
 
@@ -57,12 +73,6 @@ The simulator covers the interface and subscription handling; VPN traffic needs 
 - The selected node carries all traffic, with local networks direct. Rules, policy groups, scripts and geodata from desktop profiles are not imported.
 - Subscriptions that only reference proxy providers, without an inline `proxies` list, are not supported yet.
 - Node links are limited to `vless://` and `hysteria2://` (`hy2://`) for now; other link types in a paste are skipped with a notice.
-
-## Support Oneday
-
-Oneday is free and open source. Sponsorships pay the yearly Apple Developer Program fee that keeps TestFlight builds signed and coming, and the time that goes into keeping the project running.
-
-<a href="https://github.com/sponsors/XKHoshizora">Sponsor on GitHub</a> · 欢迎通过 GitHub Sponsors 支持有朝。
 
 ## Built on Clash Verge Rev
 
