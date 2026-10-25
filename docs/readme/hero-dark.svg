@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">有朝 Oneday</title>
+  <desc id="desc">A native iOS proxy client that imports Clash/Mihomo subscriptions and VLESS + REALITY or Hysteria2 node links. Beside the paper-boat app icon, the home-screen verse reads, in vertical columns: 直到有一天 / 愿你不再需要连接。/ 在那之前，让连接简单一点。</desc>
+  <defs>
+    <clipPath id="tile"><rect x="64" y="70" width="280" height="280" rx="64"/></clipPath>
+  </defs>
+
+  <rect width="1200" height="420" rx="28" fill="#0F1613"/>
+
+  <g id="icon" clip-path="url(#tile)">
+    <svg x="64" y="70" width="280" height="280" viewBox="0 0 1024 1024">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="640" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0B1626"/><stop offset="0.5" stop-color="#16243A"/><stop offset="1" stop-color="#4A3B3C"/></linearGradient>
+<radialGradient id="glow" cx="512" cy="640" r="520" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#E79A5E" stop-opacity="0.55"/><stop offset="0.5" stop-color="#8A5A4A" stop-opacity="0.25"/><stop offset="1" stop-color="#8A5A4A" stop-opacity="0"/></radialGradient>
+<radialGradient id="sun" cx="512" cy="640" r="328" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFE2A6"/><stop offset="0.45" stop-color="#FDB463"/><stop offset="1" stop-color="#E57E3E"/></radialGradient>
+<linearGradient id="water" x1="0" y1="640" x2="0" y2="1024" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#1C2C43"/><stop offset="0.45" stop-color="#142236"/><stop offset="1" stop-color="#0D1726"/></linearGradient>
+<linearGradient id="path" x1="0" y1="640" x2="0" y2="1000" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F4A562" stop-opacity="0.75"/><stop offset="1" stop-color="#F4A562" stop-opacity="0"/></linearGradient>
+<linearGradient id="flapL" x1="0" y1="556" x2="0" y2="742" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#DCE3EA"/><stop offset="1" stop-color="#AFBCCB"/></linearGradient><linearGradient id="flapR" x1="0" y1="556" x2="0" y2="742" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#AEBBCA"/><stop offset="1" stop-color="#8495A9"/></linearGradient><linearGradient id="pocket" x1="0" y1="606" x2="0" y2="742" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B49880"/><stop offset="1" stop-color="#6E7F93"/></linearGradient><linearGradient id="sailL" x1="0" y1="288" x2="0" y2="606" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F4F1EC"/><stop offset="1" stop-color="#F8DDBA"/></linearGradient><linearGradient id="sailR" x1="0" y1="288" x2="0" y2="606" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#E2CDB8"/><stop offset="1" stop-color="#EFB27C"/></linearGradient>
+<linearGradient id="fade" x1="0" y1="712" x2="0" y2="900" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFFFFF" stop-opacity="1"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+<mask id="fadeMask"><rect y="712" width="1024" height="312" fill="url(#fade)"/></mask>
+<filter id="blur28" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="28"/></filter>
+<filter id="blur8" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8"/></filter>
+<clipPath id="skyClip"><rect width="1024" height="640"/></clipPath>
+<clipPath id="waterClip"><rect y="640" width="1024" height="384"/></clipPath>
+<g id="boat"><polygon points="204,556 388,606 512,742 330,742" fill="url(#flapL)"/><polygon points="820,556 636,606 512,742 694,742" fill="url(#flapR)"/><polygon points="388,606 636,606 512,742" fill="url(#pocket)"/><polygon points="388,606 512,288 512,606" fill="url(#sailL)"/><polygon points="636,606 512,288 512,606" fill="url(#sailR)"/></g>
+</defs>
+<rect width="1024" height="640" fill="url(#sky)"/>
+<rect width="1024" height="1024" fill="url(#glow)" clip-path="url(#skyClip)"/>
+<g clip-path="url(#skyClip)">
+<circle cx="512" cy="588" r="282" fill="#F49A52" opacity="0.45" filter="url(#blur28)"/>
+<circle cx="512" cy="588" r="268" fill="url(#sun)"/>
+</g>
+<rect y="640" width="1024" height="384" fill="url(#water)"/>
+<g clip-path="url(#waterClip)">
+<rect x="398" y="640" width="228" height="384" fill="url(#path)" filter="url(#blur28)"/>
+<g mask="url(#fadeMask)" opacity="0.15"><use href="#boat" transform="translate(512,712) scale(1.02,-1.02) translate(-512,-742)" filter="url(#blur8)"/></g>
+</g>
+<rect y="638" width="1024" height="3" fill="#FFD9A8" opacity="0.55"/>
+<g transform="translate(512,712) scale(1.02) translate(-512,-742)">
+<ellipse cx="512" cy="744" rx="190" ry="10" fill="#000000" opacity="0.45" filter="url(#blur8)"/>
+<use href="#boat"/>
+</g>
+    </svg>
+  </g>
+  <rect x="64" y="70" width="280" height="280" rx="64" fill="none" stroke="#22302A" stroke-width="2"/>
+
+  <g id="title-block" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', sans-serif">
+    <text x="392" y="104" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" letter-spacing="3" fill="#7F8D84">iOS · PACKET TUNNEL · MIHOMO</text>
+    <text x="392" y="190" fill="#E6EBDF"><tspan font-size="84" font-weight="600">有朝</tspan><tspan dx="18" font-size="54" font-weight="400" fill="#A3B2A8">Oneday</tspan></text>
+    <text x="392" y="240" font-size="26" font-weight="500" fill="#E6EBDF">A native iOS proxy client.</text>
+    <text x="392" y="278" font-size="21" fill="#A3B2A8">Imports Clash/Mihomo subscriptions and</text>
+    <text x="392" y="306" font-size="21" fill="#A3B2A8">VLESS + REALITY or Hysteria2 node links.</text>
+    <circle cx="397" cy="344" r="5" fill="#D4B47A"/>
+    <text x="412" y="350" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" fill="#7F8D84">iOS 17+ · GPL-3.0 · from Clash Verge Rev</text>
+  </g>
+
+  <g id="verse">
+    <text font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', sans-serif" font-size="20" font-weight="400" fill="#A3B2A8" text-anchor="middle"><tspan x="1124.0" y="81.6">直</tspan><tspan x="1124.0" y="108.0">到</tspan><tspan x="1124.0" y="134.4">有</tspan><tspan x="1124.0" y="160.8">一</tspan><tspan x="1124.0" y="187.2">天</tspan></text>
+    <text font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', sans-serif" font-size="44" font-weight="400" fill="#E6EBDF" text-anchor="middle"><tspan x="1063.0" y="102.7">愿</tspan><tspan x="1063.0" y="151.1">你</tspan><tspan x="1063.0" y="199.5">不</tspan><tspan x="1063.0" y="247.9">再</tspan></text>
+    <text font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', sans-serif" font-size="44" font-weight="400" fill="#E6EBDF" text-anchor="middle"><tspan x="997.0" y="102.7">需</tspan><tspan x="997.0" y="151.1">要</tspan><tspan x="997.0" y="199.5">连</tspan><tspan x="997.0" y="247.9">接</tspan><tspan x="1019.9" y="273.4">。</tspan></text>
+    <text font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', sans-serif" font-size="20" font-weight="400" fill="#A3B2A8" text-anchor="middle"><tspan x="934.0" y="81.6">在</tspan><tspan x="934.0" y="105.6">那</tspan><tspan x="934.0" y="129.6">之</tspan><tspan x="934.0" y="153.6">前</tspan><tspan x="944.4" y="167.2">，</tspan><tspan x="934.0" y="201.6">让</tspan><tspan x="934.0" y="225.6">连</tspan><tspan x="934.0" y="249.6">接</tspan><tspan x="934.0" y="273.6">简</tspan><tspan x="934.0" y="297.6">单</tspan><tspan x="934.0" y="321.6">一</tspan><tspan x="934.0" y="345.6">点</tspan><tspan x="944.4" y="359.2">。</tspan></text>
+  </g>
+</svg>
