@@ -28,16 +28,17 @@ For device signing, copy `ios/Signing.example.xcconfig` to `ios/Signing.local.xc
 
 ## Prototype behavior
 
-- Import an HTTPS subscription or a local Clash/Mihomo YAML file.
-- Select an inline node from the `proxies` list, then connect or disconnect.
+- Import HTTPS subscriptions, local Clash/Mihomo YAML files, and `vless://` or `hysteria2://` links. Each subscription and file is its own group; links collect in 「独立节点」, where a link whose name is already listed replaces that node.
+- Delete a link node or a whole group with a left swipe, or clear every node; deleting waits until the tunnel is disconnected.
+- Select an inline node from any group, then connect or disconnect. While connected, the page polls the tunnel for live speed and shows the connected time.
 - REALITY, Vision, TLS, Hysteria2 obfuscation, and port-hopping options remain in the outbound configuration passed to the core.
 - The prototype uses the selected node globally, with local network routes direct. Desktop rules, policy groups, scripts, and geodata are not imported into this minimal runtime.
 - Provider-only profiles without an inline `proxies` list are not supported yet. Invalid profiles do not replace the saved subscription.
-- Subscription URLs, credentials, and runtime configuration stay in the app's protected App Group storage. The subscription is fetched directly without a third-party conversion service.
+- Subscription URLs, credentials, and runtime configuration stay in the app's protected App Group storage. The subscription is fetched directly without a third-party conversion service, and redirects to another host must reach public addresses.
 
 ## Validation
 
-`pnpm --dir mobile test` checks that REALITY and Hysteria2 parameters survive YAML import and runtime generation. It also checks rejection of invalid containers and selections.
+`pnpm --dir mobile test` checks that REALITY and Hysteria2 parameters survive YAML and link import and runtime generation, that YAML alias graphs are bounded, and that single-source profiles migrate into node groups. It also checks rejection of invalid containers and selections.
 
 The hosted `SubscriptionIntegrationTests` tests check the Scene window and simulator VPN handling, then refresh an already-imported subscription through the actual iOS URLSession client. Without a saved subscription, it is skipped. This performs a network request to the subscription URL stored locally in the app; no credentials are in the test source.
 
