@@ -17,13 +17,23 @@ final class OnedayViewController: UIViewController, WKNavigationDelegate {
         configuration.setURLSchemeHandler(assets, forURLScheme: "oneday")
         configuration.userContentController.addScriptMessageHandler(NativeHandler(owner: self), contentWorld: .page, name: "oneday")
         webView = WKWebView(frame: view.bounds, configuration: configuration)
-        webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        webView.translatesAutoresizingMaskIntoConstraints = false
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.isOpaque = false
         // Also the launch screen color; both match the page's --bg in each appearance.
         webView.backgroundColor = UIColor(named: "Background")
+        view.backgroundColor = webView.backgroundColor
         webView.navigationDelegate = self
         view.addSubview(webView)
+        // The page ends where the keyboard begins, accessory bar included. WebKit's visual
+        // viewport does not always report those, which left the add sheet's input covered.
+        view.keyboardLayoutGuide.usesBottomSafeArea = false
+        NSLayoutConstraint.activate([
+            webView.topAnchor.constraint(equalTo: view.topAnchor),
+            webView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            webView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            webView.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor),
+        ])
         webView.load(URLRequest(url: URL(string: "oneday://app/index.html")!))
         Task { try? await tunnel.load() }
         statusObserver = NotificationCenter.default.addObserver(forName: .NEVPNStatusDidChange, object: nil, queue: .main) { [weak self] note in
