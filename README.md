@@ -23,19 +23,20 @@
 
 ## What it does
 
-- **Subscriptions.** Import a Clash/Mihomo subscription over HTTPS or from a local YAML file, then refresh it from the app.
-- **Node links.** Paste `vless://` (VLESS + REALITY) and `hysteria2://` links, one or several at a time.
-- **One switch.** Choose a node and connect. A Packet Tunnel extension runs mihomo with that node.
+- **Subscriptions.** Import a Clash/Mihomo subscription over HTTPS or from a local YAML file. Each one becomes its own group of nodes and refreshes on its own.
+- **Node links.** Paste `vless://` (VLESS + REALITY) and `hysteria2://` links, one or several at a time. They collect in the 「独立节点」 (independent nodes) group, and a pasted link whose name is already listed replaces that node.
+- **Tidy up.** Swipe left to delete a single link node or a whole group, or clear every node from the bottom of the list. Deleting waits until you disconnect.
+- **One switch.** Choose a node and connect. A Packet Tunnel extension runs mihomo with that node. While connected, the app shows live download and upload speed and how long you've been connected.
 - **Follows the system.** The interface switches between light and dark with iOS.
-- **Stays on the device.** Subscription URLs, credentials and runtime configuration are kept in the app's App Group storage. Subscriptions are fetched directly, without a third-party conversion service.
+- **Stays on the device.** Subscription URLs, credentials and runtime configuration are kept in the app's App Group storage. Subscriptions are fetched directly, without a third-party conversion service, and a subscription can't redirect the app to local or private network addresses.
 
 ## How it fits together
 
 | Part | Path | Role |
 | --- | --- | --- |
-| Interface | [`mobile/`](mobile) | React UI in a WKWebView: import, parse, choose a node |
+| Interface | [`mobile/`](mobile) | React UI in a WKWebView: import, parse, group and choose nodes |
 | Host app | [`ios/App`](ios/App) | Swift host: fetches subscriptions, saves the profile, starts the tunnel |
-| Tunnel | [`ios/PacketTunnel`](ios/PacketTunnel) | Network Extension that runs the mihomo core |
+| Tunnel | [`ios/PacketTunnel`](ios/PacketTunnel) | Network Extension that runs the mihomo core and reports traffic |
 | Desktop base | [`src/`](src), [`src-tauri/`](src-tauri) | Clash Verge Rev v2.5.8, kept with its history |
 
 ## Build
@@ -54,7 +55,7 @@ The simulator covers the interface and subscription handling; VPN traffic needs 
 
 - The selected node carries all traffic, with local networks direct. Rules, policy groups, scripts and geodata from desktop profiles are not imported.
 - Subscriptions that only reference proxy providers, without an inline `proxies` list, are not supported yet.
-- Node links are limited to `vless://` and `hysteria2://` (`hy2://`) for now.
+- Node links are limited to `vless://` and `hysteria2://` (`hy2://`) for now; other link types in a paste are skipped with a notice.
 
 ## Built on Clash Verge Rev
 

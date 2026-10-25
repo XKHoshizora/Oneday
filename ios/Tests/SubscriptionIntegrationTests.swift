@@ -28,16 +28,26 @@ final class SubscriptionIntegrationTests: XCTestCase {
 #endif
 
     func testSavedSubscriptionCanBeRefreshed() async throws {
+        // Profiles keep each subscription as a source; ones saved before node groups held a single URL.
         guard let data = try OnedayStore.read("profile.json"),
-              var profile = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let url = profile["sourceURL"] as? String else {
+              var profile = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw XCTSkip("Import an authorized subscription in the app before running this network integration test.")
+        }
+        var sources = profile["sources"] as? [[String: Any]] ?? []
+        let index = sources.firstIndex { $0["url"] is String }
+        guard let url = index.flatMap({ sources[$0]["url"] as? String }) ?? profile["sourceURL"] as? String else {
             throw XCTSkip("Import an authorized subscription in the app before running this network integration test.")
         }
         let content = try await SubscriptionClient().fetch(url)
         XCTAssertFalse(content.isEmpty)
         XCTAssertLessThanOrEqual(content.utf8.count, SubscriptionClient.maximumBytes)
         XCTAssertTrue(content.contains("proxies:"), "The server must return Clash YAML to the app's User-Agent.")
-        profile["yaml"] = content
+        if let index {
+            sources[index]["yaml"] = content
+            profile["sources"] = sources
+        } else {
+            profile["yaml"] = content
+        }
         let updated = try JSONSerialization.data(withJSONObject: profile)
         try OnedayStore.write(updated, to: "profile.json")
         XCTAssertTrue(try OnedayStore.read("profile.json") == updated, "The refreshed subscription must survive a storage round trip.")
