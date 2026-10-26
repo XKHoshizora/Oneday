@@ -700,9 +700,6 @@ footer strong {
   font-weight: 450;
   letter-spacing: 2px;
 }
-footer p {
-  margin: 6px 0;
-}
 .sr-only {
   position: absolute;
   width: 1px;

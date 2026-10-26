@@ -557,8 +557,6 @@ export function App() {
 
       <footer>
         <strong>有朝 · Oneday · いつか</strong>
-        <p>基于 Clash Verge Rev 与 mihomo</p>
-        <p>0.1.0 · 个人签名自用</p>
       </footer>
     </main>
   )
