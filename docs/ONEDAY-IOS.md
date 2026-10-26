@@ -51,6 +51,12 @@ xcodebuild -project ios/Oneday.xcodeproj -scheme Oneday \
 
 VPN traffic forwarding, DNS behavior, network changes, and extension memory still require a signed physical iPhone. A successful build or simulator test is not evidence of those behaviors.
 
+## TestFlight
+
+[`ios-testflight.yml`](../.github/workflows/ios-testflight.yml) archives and uploads a build whenever a merge to `master` touches `ios/`, `mobile/` or `scripts/ios-prepare.sh`, and can also be started by hand from the Actions tab. The build number is the UTC date and time (`YYYYMMDD.HHMM`), so it keeps rising across automatic and manual uploads. Signing is automatic through an App Store Connect API key, stored as the repository secrets `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID` and `APP_STORE_CONNECT_PRIVATE_KEY` (the full `.p8` text).
+
+A manual upload uses the same [`ExportOptions.plist`](../ios/ExportOptions.plist): run `scripts/ios-prepare.sh`, archive the `Oneday` scheme in Release with `CURRENT_PROJECT_VERSION` set, then export with `-exportOptionsPlist ios/ExportOptions.plist`.
+
 ## Upstream components
 
 See [ONEDAY-UPSTREAM.md](ONEDAY-UPSTREAM.md) for pinned versions and source attribution. The GPL-3.0 license applies to this derivative. Additional component notices are bundled under `ios/App/Resources/Licenses`.
