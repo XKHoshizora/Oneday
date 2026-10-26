@@ -24,6 +24,9 @@ targets:
         CFBundleDisplayName: Oneday
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # Matches the export compliance answer on record: standard encryption, not distributed
+        # in France, which App Store Connect files as not using non-exempt encryption.
+        ITSAppUsesNonExemptEncryption: false
         LSRequiresIPhoneOS: true
         UILaunchScreen:
           UIColorName: Background
