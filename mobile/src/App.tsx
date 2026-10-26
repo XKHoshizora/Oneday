@@ -145,6 +145,21 @@ export function App() {
     }
   }, [])
 
+  // The native view shrinks to end at the keyboard only after WebKit has decided whether to
+  // scroll the focused field, so a field near the bottom would stay hidden below the new edge.
+  useEffect(() => {
+    const reveal = () => {
+      const field = document.activeElement
+      if (field instanceof HTMLInputElement)
+        (field.closest('.card') ?? field).scrollIntoView({
+          block: 'nearest',
+          behavior: 'smooth',
+        })
+    }
+    window.addEventListener('resize', reveal)
+    return () => window.removeEventListener('resize', reveal)
+  }, [])
+
   async function commit(next: Source[], prefer = selected, imported = true) {
     if (next.length === 0) {
       await callNative('deleteProfile')
