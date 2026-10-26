@@ -30,6 +30,16 @@
 > [!NOTE]
 > Oneday is a personal prototype. Builds go to TestFlight internal testing only; it is not on the App Store.
 
+<p align="center">
+  <img src="./docs/readme/screenshots/home.png" width="30%" alt="Home screen in light mode: the vertical verse, the connect button, and nodes grouped under a subscription.">
+  &nbsp;
+  <img src="./docs/readme/screenshots/connected.png" width="30%" alt="Connected in dark mode: the lit button, live download and upload speed, and the connected time.">
+  &nbsp;
+  <img src="./docs/readme/screenshots/nodes.png" width="30%" alt="Node list with a subscription group and 独立节点, one link node swiped left to show its delete button.">
+</p>
+
+<p align="center"><sub>Screenshots use sample nodes.</sub></p>
+
 ## What it does
 
 - **Subscriptions.** Import a Clash/Mihomo subscription over HTTPS or from a local YAML file. Each one becomes its own group of nodes and refreshes on its own.

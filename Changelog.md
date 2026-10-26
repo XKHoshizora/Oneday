@@ -10,6 +10,7 @@
 - Fix the 「添加节点」 input being covered by the keyboard toolbar, which happened after relaunching the app and with third-party keyboards.
 - Group nodes by subscription, file and 「独立节点」, add more from the + button, and delete single nodes, whole groups or everything.
 - Show live download and upload speed with the connected time, and animate the connect button through idle, connecting and connected.
+- Trim the home screen footer to the app's name.
 - Fix vless:// REALITY links that showed connected but carried no traffic on servers requiring post-quantum key exchange.
 - Reject subscriptions that redirect to local or private network addresses, or whose YAML references expand into an oversized configuration.
 
