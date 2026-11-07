@@ -1,0 +1,26 @@
+{
+  "version": "2026-11-07",
+  "sdk": "v1.19.33-clash.3",
+  "files": {
+    "cn-domain.mrs": "0ae606ef57c94d6febf8d961929a663fcb14289a00e849c177068b84616faff6",
+    "cn-ip.mrs": "97147859ffbea4e0af28d5be32e34880193c258da8774bb6abe6cc8250cf075f"
+  },
+  "sources": [
+    {
+      "data": "cn-domain.mrs",
+      "project": "https://github.com/felixonmars/dnsmasq-china-list",
+      "commit": "a8942d3ac6ebd8dcfc582d4e97fbb443a2176cb2",
+      "files": ["accelerated-domains.china.conf"],
+      "license": "WTFPL",
+      "entries": 109455
+    },
+    {
+      "data": "cn-ip.mrs",
+      "project": "https://github.com/gaoyifan/china-operator-ip",
+      "commit": "f162630c8cdad6ced5ef59e606cc93919123ac57",
+      "files": ["china.txt", "china6.txt"],
+      "license": "MIT",
+      "entries": 9636
+    }
+  ]
+}

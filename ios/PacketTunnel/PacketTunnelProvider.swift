@@ -66,9 +66,26 @@ final class PacketTunnelProvider: NEPacketTunnelProvider, ClashPlatformInterface
         coreQueue.async { [self] in cleanup(); completionHandler() }
     }
 
-    // The app's only message is a poll for the live speed readout.
+    // The app polls for the live speed readout, and asks for a reload after rewriting runtime.yaml.
     override func handleAppMessage(_ messageData: Data, completionHandler: ((Data?) -> Void)?) {
-        coreQueue.async { [self] in completionHandler?(service == nil ? nil : Data(ClashTrafficJSON().utf8)) }
+        coreQueue.async { [self] in
+            guard messageData == Data("reload".utf8) else {
+                completionHandler?(service == nil ? nil : Data(ClashTrafficJSON().utf8))
+                return
+            }
+            var reply: [String: Any] = ["ok": true]
+            do {
+                guard let service, let data = try OnedayStore.read("runtime.yaml"), let yaml = String(data: data, encoding: .utf8), !yaml.isEmpty else {
+                    throw OnedayError.message("VPN 未在运行。")
+                }
+                try service.reload(yaml)
+                // Connections opened under the previous rules would otherwise keep their old route.
+                ClashCloseAllConnections()
+            } catch {
+                reply = ["ok": false, "error": error.localizedDescription]
+            }
+            completionHandler?(try? JSONSerialization.data(withJSONObject: reply))
+        }
     }
 
     private func cleanup() {

@@ -4,6 +4,9 @@ export type AppState = {
   connectedAt?: number
   // Saved before node groups, this can still be a single-source profile.
   profile?: unknown
+  routing?: unknown
+  // Version of the China lists installed for the tunnel; absent when none are usable.
+  routingData?: string
   lastError?: string
 }
 declare global {
@@ -13,6 +16,8 @@ declare global {
         oneday: { postMessage(message: unknown): Promise<unknown> }
       }
     }
+    // Called by the app as the keyboard starts to move, with the height it will cover.
+    onedayKeyboard?: (height: number, duration: number) => void
   }
 }
 

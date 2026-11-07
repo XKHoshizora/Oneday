@@ -30,9 +30,12 @@ describe('share link import', () => {
         },
       },
     ])
-    const runtime = load(runtimeConfig(parseNodes(yaml), '节点-Reality')) as {
-      proxies: unknown
-    }
+    const runtime = load(
+      runtimeConfig(parseNodes(yaml), '节点-Reality', {
+        rules: [],
+        chinaLists: true,
+      }),
+    ) as { proxies: unknown }
     expect(runtime.proxies).toEqual(parseNodes(yaml))
   })
 

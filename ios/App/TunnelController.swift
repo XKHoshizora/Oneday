@@ -75,5 +75,35 @@ final class TunnelController {
 #endif
     }
 
+    /// Brings runtime.yaml in line with the saved nodes and rules. A running tunnel reloads it, and if that
+    /// fails the previous file is restored so the file always describes what the tunnel runs.
+    func apply(configuration: String) async throws {
+        try await load()
+        let data = Data(configuration.utf8)
+        let previous = try OnedayStore.read("runtime.yaml")
+        guard data != previous else { return }
+        if canChangeProfile { return try OnedayStore.write(data, to: "runtime.yaml") }
+        guard let session = manager?.connection as? NETunnelProviderSession, [.connected, .reasserting].contains(session.status) else {
+            throw OnedayError.message("VPN 正在连接或断开，请稍后再试。")
+        }
+        try OnedayStore.write(data, to: "runtime.yaml")
+        do {
+            let reply: Data? = try await withCheckedThrowingContinuation { continuation in
+                do {
+                    try session.sendProviderMessage(Data("reload".utf8)) { continuation.resume(returning: $0) }
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+            let result = reply.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+            guard result?["ok"] as? Bool == true else {
+                throw OnedayError.message("新规则未能应用到当前连接：\(result?["error"] as? String ?? "VPN 没有响应")")
+            }
+        } catch {
+            if let previous { try? OnedayStore.write(previous, to: "runtime.yaml") }
+            throw error
+        }
+    }
+
     func disconnect() { manager?.connection.stopVPNTunnel() }
 }

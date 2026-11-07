@@ -45,6 +45,7 @@
 - **Subscriptions.** Import a Clash/Mihomo subscription over HTTPS or from a local YAML file. Each one becomes its own group of nodes and refreshes on its own.
 - **Node links.** Paste `vless://` (VLESS + REALITY) and `hysteria2://` links, one or several at a time. They collect in the 「独立节点」 (independent nodes) group, and a pasted link whose name is already listed replaces that node.
 - **Tidy up.** Swipe left to delete a single link node or a whole group, or clear every node from the bottom of the list. Deleting waits until you disconnect.
+- **Split routing.** Mainland China sites and IP addresses connect directly, local networks stay direct, and everything else goes through the selected node. DNS is split the same way. Add exceptions by domain, domain suffix or IPv4/IPv6 range to send something direct or through the node; the more specific exception wins, and changes apply to a running connection right away.
 - **One switch.** Choose a node and connect. A Packet Tunnel extension runs mihomo with that node. While connected, the app shows live download and upload speed and how long you've been connected.
 - **Follows the system.** The interface switches between light and dark with iOS.
 - **Stays on the device.** Subscription URLs, credentials and runtime configuration are kept in the app's App Group storage. Subscriptions are fetched directly, without a third-party conversion service, and a subscription can't redirect the app to local or private network addresses.
@@ -80,7 +81,8 @@ The simulator covers the interface and subscription handling; VPN traffic needs 
 
 ## Current limits
 
-- The selected node carries all traffic, with local networks direct. Rules, policy groups, scripts and geodata from desktop profiles are not imported.
+- Routing is fixed to China direct, everything else through the selected node, plus your exceptions. Rules, policy groups and scripts from subscriptions are not imported.
+- The China domain and IP lists ship with the app ([sources and update steps](docs/ONEDAY-IOS.md#routing-data)) and are refreshed with app updates, not downloaded by the app.
 - Subscriptions that only reference proxy providers, without an inline `proxies` list, are not supported yet.
 - Node links are limited to `vless://` and `hysteria2://` (`hy2://`) for now; other link types in a paste are skipped with a notice.
 

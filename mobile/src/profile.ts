@@ -1,5 +1,7 @@
 import { dump, load } from 'js-yaml'
 
+import { type CustomRule, ruleLines } from './routing'
+
 export type ClashNode = Record<string, unknown> & {
   name: string
   type: string
@@ -143,9 +145,54 @@ function detach(
   return copy
 }
 
-export function runtimeConfig(nodes: ClashNode[], selected: string): string {
+const proxyGroup = 'Oneday'
+const domesticDNS = [
+  'https://223.5.5.5/dns-query',
+  'https://1.12.12.12/dns-query',
+]
+// Private, shared, link-local, loopback and multicast ranges, and names that resolve into them,
+// are reached directly unless an exception says otherwise.
+const localRanges = [
+  'IP-CIDR,10.0.0.0/8,DIRECT',
+  'IP-CIDR,100.64.0.0/10,DIRECT',
+  'IP-CIDR,127.0.0.0/8,DIRECT',
+  'IP-CIDR,169.254.0.0/16,DIRECT',
+  'IP-CIDR,172.16.0.0/12,DIRECT',
+  'IP-CIDR,192.168.0.0/16,DIRECT',
+  'IP-CIDR,224.0.0.0/4,DIRECT',
+  'IP-CIDR6,::1/128,DIRECT',
+  'IP-CIDR6,fc00::/7,DIRECT',
+  'IP-CIDR6,fe80::/10,DIRECT',
+  'IP-CIDR6,ff00::/8,DIRECT',
+]
+
+const chinaProviders = {
+  'cn-domain': {
+    type: 'file',
+    behavior: 'domain',
+    format: 'mrs',
+    path: 'routing/cn-domain.mrs',
+  },
+  'cn-ip': {
+    type: 'file',
+    behavior: 'ipcidr',
+    format: 'mrs',
+    path: 'routing/cn-ip.mrs',
+  },
+}
+
+// `chinaLists` says whether the app installed the bundled China lists. Their paths are relative to
+// the core's working directory, where the app's RoutingData copies them.
+export type RuntimeRouting = { rules: CustomRule[]; chinaLists: boolean }
+
+export function runtimeConfig(
+  nodes: ClashNode[],
+  selected: string,
+  routing: RuntimeRouting,
+): string {
   if (!nodes.some((node) => node.name === selected))
     throw new Error('请选择有效节点。')
+  const { chinaLists } = routing
   // Keep each outbound intact: REALITY, TLS and Hysteria2 extensions are core-owned.
   return dump(
     {
@@ -155,6 +202,8 @@ export function runtimeConfig(nodes: ClashNode[], selected: string): string {
       'allow-lan': false,
       'find-process-mode': 'off',
       'unified-delay': true,
+      // Otherwise UDP that reaches a node without UDP support falls through to a direct connection.
+      'x-clash-udp-unsupported': 'REJECT',
       tun: {
         enable: true,
         stack: 'gvisor',
@@ -168,21 +217,36 @@ export function runtimeConfig(nodes: ClashNode[], selected: string): string {
         ipv6: true,
         'enhanced-mode': 'fake-ip',
         'fake-ip-range': '198.18.0.1/16',
-        'default-nameserver': ['1.1.1.1', '8.8.8.8'],
-        nameserver: ['https://1.1.1.1/dns-query', 'https://8.8.8.8/dns-query'],
-        'proxy-server-nameserver': [
-          'https://1.1.1.1/dns-query',
-          'https://8.8.8.8/dns-query',
+        'default-nameserver': ['223.5.5.5', '119.29.29.29'],
+        // Lookups outside the China list go through the selected node, so they are neither
+        // tampered with on the way nor answered with addresses meant for mainland users.
+        nameserver: [
+          `https://1.1.1.1/dns-query#${proxyGroup}`,
+          `https://8.8.8.8/dns-query#${proxyGroup}`,
         ],
+        ...(chinaLists
+          ? { 'nameserver-policy': { 'rule-set:cn-domain': domesticDNS } }
+          : {}),
+        // Node servers and direct connections resolve without the tunnel, so neither can loop.
+        'proxy-server-nameserver': [
+          ...domesticDNS,
+          'https://1.1.1.1/dns-query',
+        ],
+        'direct-nameserver': domesticDNS,
       },
       proxies: nodes,
-      'proxy-groups': [{ name: 'Oneday', type: 'select', proxies: [selected] }],
+      'proxy-groups': [
+        { name: proxyGroup, type: 'select', proxies: [selected] },
+      ],
+      ...(chinaLists ? { 'rule-providers': chinaProviders } : {}),
+      // Exceptions first, then local networks, then the China lists; anything else uses the node.
       rules: [
-        'IP-CIDR,127.0.0.0/8,DIRECT,no-resolve',
-        'IP-CIDR,192.168.0.0/16,DIRECT,no-resolve',
-        'IP-CIDR,10.0.0.0/8,DIRECT,no-resolve',
-        'IP-CIDR,172.16.0.0/12,DIRECT,no-resolve',
-        'MATCH,Oneday',
+        ...ruleLines(routing.rules, proxyGroup),
+        ...localRanges,
+        ...(chinaLists
+          ? ['RULE-SET,cn-domain,DIRECT', 'RULE-SET,cn-ip,DIRECT']
+          : []),
+        `MATCH,${proxyGroup}`,
       ],
     },
     { noRefs: true, lineWidth: -1 },

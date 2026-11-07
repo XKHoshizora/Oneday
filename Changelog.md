@@ -13,6 +13,7 @@
 - Trim the home screen footer to the app's name.
 - Fix vless:// REALITY links that showed connected but carried no traffic on servers requiring post-quantum key exchange.
 - Reject subscriptions that redirect to local or private network addresses, or whose YAML references expand into an oversized configuration.
+- Route mainland China sites and addresses directly and everything else through the selected node, with 「分流」 exceptions by domain, suffix or IP range that apply at once while connected.
 
 ## v2.5.8
 
