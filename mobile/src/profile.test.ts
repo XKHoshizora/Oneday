@@ -36,7 +36,9 @@ const fixture = `proxies:
 describe('Clash subscription import', () => {
   it('preserves REALITY, Vision and Hysteria2 options through runtime generation', () => {
     const before = parseNodes(fixture)
-    const result = load(runtimeConfig(before, 'Hy2')) as Record<string, unknown>
+    const result = load(
+      runtimeConfig(before, 'Hy2', { rules: [], chinaLists: true }),
+    ) as Record<string, unknown>
     expect(result.proxies).toEqual(before)
     expect(result['proxy-groups']).toEqual([
       { name: 'Oneday', type: 'select', proxies: ['Hy2'] },
@@ -97,6 +99,11 @@ describe('Clash subscription import', () => {
   it('rejects unsupported containers and invalid selections before native connection', () => {
     expect(() => parseNodes('<html>not a subscription</html>')).toThrow()
     expect(() => parseNodes('proxy-providers: {}')).toThrow()
-    expect(() => runtimeConfig(parseNodes(fixture), 'missing')).toThrow()
+    expect(() =>
+      runtimeConfig(parseNodes(fixture), 'missing', {
+        rules: [],
+        chinaLists: true,
+      }),
+    ).toThrow()
   })
 })

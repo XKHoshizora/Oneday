@@ -51,6 +51,9 @@ targets:
       - path: App/Resources/Licenses
         type: folder
         buildPhase: resources
+      - path: App/Resources/Routing
+        type: folder
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.xkhoshizora.oneday

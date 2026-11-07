@@ -41,6 +41,15 @@
   --danger: #b4573a;
   --scrim: rgba(21, 60, 52, 0.28);
   --focus: #b8cc92;
+  --dots-bottom: max(12px, env(safe-area-inset-bottom));
+  /* Set by the app from the keyboard's own frame and timing. */
+  --keyboard: 0px;
+  --keyboard-duration: 0ms;
+  --keyboard-closing: 0ms;
+  /* Close to the curve the iOS keyboard moves with. */
+  --keyboard-curve: cubic-bezier(0.38, 0.7, 0.125, 1);
+  /* The keyboard also covers the bottom safe area, which sheets already leave room for. */
+  --keyboard-lift: max(0px, var(--keyboard) - env(safe-area-inset-bottom));
 
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
   color: var(--ink);
@@ -119,11 +128,83 @@ input:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
-main {
+/* Pages turn with native horizontal scrolling, not a transform, so fixed sheets stay fixed. */
+.pager {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.pager::-webkit-scrollbar {
+  display: none;
+}
+/* Each page scrolls on its own and keeps its place while the other is shown. */
+.page {
+  flex: none;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+/* Padding sits inside the scroller: WebKit offsets sticky banners by a scroller's own padding. */
+.page-body {
   max-width: 540px;
   margin: auto;
   padding: calc(18px + env(safe-area-inset-top)) 24px
-    calc(28px + env(safe-area-inset-bottom));
+    calc(var(--dots-bottom) + 60px + var(--keyboard));
+  transition: padding-bottom var(--keyboard-closing) var(--keyboard-curve);
+}
+.pager-dots {
+  position: fixed;
+  left: 50%;
+  bottom: var(--dots-bottom);
+  z-index: 5;
+  display: flex;
+  padding: 0 5px;
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--card) 80%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  transform: translateX(-50%);
+}
+/* With a field focused, the dots would sit between it and the keyboard's accessory bar. */
+:root:has(input[type="text"]:focus) .pager-dots {
+  visibility: hidden;
+}
+.pager-dots button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.pager-dots button::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dot);
+  transition: background-color 0.3s;
+}
+.pager-dots button[aria-current]::before {
+  background: var(--ink);
+}
+/* Taller to tap than the capsule looks. */
+.pager-dots button::after {
+  content: "";
+  position: absolute;
+  inset: -9px 0;
 }
 header {
   display: flex;
@@ -136,6 +217,10 @@ header {
   gap: 9px;
   font-size: 21px;
   font-weight: 650;
+  letter-spacing: 1px;
+}
+.page-title {
+  font-size: 21px;
   letter-spacing: 1px;
 }
 .roman {
@@ -588,14 +673,29 @@ input::placeholder {
   background: var(--scrim);
   animation: fade 0.25s ease both;
 }
+/* The card continues below the sheet, behind the keyboard and its accessory bar. */
+.sheet-layer::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  max-width: 540px;
+  height: var(--keyboard);
+  margin: 0 auto;
+  background: var(--card);
+  transition: height var(--keyboard-duration) var(--keyboard-curve);
+}
 .sheet {
   width: 100%;
   max-width: 540px;
   margin: 0 auto;
+  max-height: calc(100% - env(safe-area-inset-top) - var(--keyboard-lift));
+  overflow-y: auto;
   padding: 10px 24px calc(24px + env(safe-area-inset-bottom));
   border-radius: 22px 22px 0 0;
   background: var(--card);
+  translate: 0 calc(-1 * var(--keyboard-lift));
   animation: slide 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  transition: translate var(--keyboard-duration) var(--keyboard-curve);
 }
 .sheet-handle {
   display: block;
@@ -669,6 +769,9 @@ input::placeholder {
   transform: scale(1);
 }
 .error {
+  position: sticky;
+  top: calc(8px + env(safe-area-inset-top));
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -681,6 +784,9 @@ input::placeholder {
   padding: 14px;
   margin: 8px 0;
   animation: drop 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+header + .error {
+  margin-top: 18px;
 }
 .error button {
   margin-left: auto;
@@ -711,8 +817,167 @@ footer strong {
   white-space: nowrap;
   border: 0;
 }
+.rules-intro {
+  margin: 26px 2px 18px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+.rules-warning {
+  color: var(--error-ink);
+}
+.rules {
+  padding-top: 8px;
+  padding-bottom: 6px;
+}
+.rules-empty {
+  margin: 0 0 12px;
+}
+.rule {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--divider);
+}
+.rule-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  padding: 13px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+}
+.rule-info {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.rule-info strong {
+  font-size: 12px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rule-info small {
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+.rule-action {
+  flex: none;
+  border-radius: 6px;
+  padding: 3px 7px;
+  font-size: 10px;
+  background: var(--chip);
+  color: var(--chip-ink);
+}
+.rule-action.proxy {
+  background: var(--chip-active);
+  color: var(--chip-active-ink);
+}
+.rule.off .rule-info,
+.rule.off .rule-action {
+  opacity: 0.45;
+}
+.switch {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-right: -5px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.switch span {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  border: 1px solid var(--radio-border);
+  border-radius: 10px;
+  background: var(--field);
+  transition:
+    background-color 0.25s,
+    border-color 0.25s;
+}
+.switch span::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--dot);
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.25s;
+}
+.switch[aria-checked="true"] span {
+  border-color: var(--accent-strong);
+  background: var(--chip-active);
+}
+.switch[aria-checked="true"] span::after {
+  transform: translateX(14px);
+  background: var(--accent-strong);
+}
+.rules-note {
+  margin: 0 2px;
+}
+.rule-form {
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+.segmented {
+  display: flex;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--chip);
+}
+.segmented button {
+  flex: 1;
+  min-height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--chip-ink);
+  font-size: 12px;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.segmented button[aria-checked="true"] {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(21, 60, 52, 0.14);
+}
+.sheet .rule-hint {
+  margin: -4px 0 4px;
+}
+.field-error {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--danger);
+}
+.sheet-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
+  margin-top: 4px;
+}
 @media (min-width: 600px) {
-  main {
+  .page-body {
     padding-top: 35px;
   }
   .connection {
